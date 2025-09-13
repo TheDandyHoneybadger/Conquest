@@ -95,8 +95,8 @@
     position: absolute;
     box-sizing: border-box;
     text-align: center;
-    top: 77.3%;
-    left: 10%;
+    top: 75%;
+    left: -17%;
     width: 80%;
     z-index: 5; color: #ffffff; font-family: 'Lora', serif; font-size: 1em; font-weight: bold;
 }
@@ -104,8 +104,8 @@
     position: absolute;
     box-sizing: border-box;
     text-align: center;
-    top: 73.3%;
-    left: 10%;
+    top: 76%;
+    left: 35%;
     width: 80%;
     z-index: 6; color: #e0e0e0; font-family: 'Lora', serif; font-size: 0.8em;
 }

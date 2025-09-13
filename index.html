@@ -122,7 +122,7 @@
                 <div id="game-log" class="game-log"></div>
             </div>
         </div>
-    
+
         <div id="field">
             <div class="match-score">
                 <span id="oponente-score">0</span>
@@ -131,16 +131,22 @@
             </div>
 
             <div id="mao-oponente" class="mao"></div>
+            
             <div class="tabuleiro oponente">
                 <div class="lado-jogador oponente">
-                    <div id="oponente-deck" class="zona"></div>
-                    <div id="oponente-s2" class="zona"></div>
-                    <div id="oponente-general" class="zona general"></div>
-                    <div id="oponente-s1" class="zona"></div>
+                    <!-- Linha superior do oponente: CEMITÉRIO - S1 - G - S2 - DECK -->
                     <div id="oponente-cemiterio" class="zona"></div>
-                    <div id="oponente-u3" class="zona"></div>
-                    <div id="oponente-u2" class="zona"></div>
+                    <div id="oponente-s1" class="zona"></div>
+                    <div id="oponente-g" class="zona general"></div>
+                    <div id="oponente-s2" class="zona"></div>
+                    <div id="oponente-deck" class="zona"></div>
+                    
+                    <!-- Linha inferior do oponente: VAZIO - U1 - U2 - U3 - VAZIO -->
+                    <div id="oponente-vazio1" class="zona zona-vazia"></div>
                     <div id="oponente-u1" class="zona"></div>
+                    <div id="oponente-u2" class="zona"></div>
+                    <div id="oponente-u3" class="zona"></div>
+                    <div id="oponente-vazio2" class="zona zona-vazia"></div>
                 </div>
             </div>
 
@@ -148,19 +154,25 @@
 
             <div class="tabuleiro jogador">
                 <div class="lado-jogador jogador">
+                    <!-- Linha superior do jogador: VAZIO - U1 - U2 - U3 - VAZIO -->
+                    <div id="jogador-vazio1" class="zona zona-vazia"></div>
                     <div id="jogador-u1" class="zona"></div>
                     <div id="jogador-u2" class="zona"></div>
                     <div id="jogador-u3" class="zona"></div>
+                    <div id="jogador-vazio2" class="zona zona-vazia"></div>
+                    
+                    <!-- Linha inferior do jogador: CEMITÉRIO - S1 - G - S2 - DECK -->
                     <div id="jogador-cemiterio" class="zona"></div>
                     <div id="jogador-s1" class="zona"></div>
-                    <div id="jogador-general" class="zona general"></div>
+                    <div id="jogador-g" class="zona general"></div>
                     <div id="jogador-s2" class="zona"></div>
                     <div id="jogador-deck" class="zona"></div>
                 </div>
             </div>
+            
             <div id="mao-jogador" class="mao"></div>
         </div>
-    
+
         <div class="game-ui-panel right-panel">
             <div id="phase-track" class="phase-track"></div>
             <div class="menu-buttons">

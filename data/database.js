@@ -289,65 +289,67 @@ export const databaseCartas = [
         }
     },
     {
+        "tipo": "Unidade",
         "id": "CORE_023",
         "nome": "Bárbaro Sedento de Sangue",
-        "tipo": "Unidade",
         "nacao": "Kragmar",
         "tituloNacao": "A Sede de Kragmar",
-        "custo": 3,
         "descricao": "Quando uma unidade inimiga morre, ganha +2 de Ataque até o final do turno.",
+        "custo": 3,
         "ataque": 3,
         "vida": 3,
+        "arte": "images/CORE/Unidade/CORE_023.webp",
         "efeito": "onEnemyUnitDeath:tempBuff(2,0,self)"
     },
     {
+        "tipo": "Unidade",
         "id": "CORE_024",
         "nome": "Campeão da Arena",
-        "tipo": "Unidade",
         "nacao": "Kragmar",
         "tituloNacao": "O Desafio de Kragmar",
-        "custo": 3,
         "descricao": "Quando esta unidade sobrevive a dano, ganha +2 de Ataque permanentemente.",
+        "custo": 3,
         "ataque": 2,
         "vida": 4,
+        "arte": "images/CORE/Unidade/CORE_024.webp",
         "efeito": "onSurviveDamage:buff(2,0,self)"
     },
     {
+        "tipo": "Unidade",
         "id": "CORE_025",
         "nome": "Chefe de Guerra Orc",
-        "tipo": "Unidade",
         "nacao": "Kragmar",
         "tituloNacao": "O Comando de Kragmar",
-        "custo": 4,
         "descricao": "Ao entrar em campo, suas outras unidades ganham +2 de Ataque até o final do turno.",
+        "custo": 4,
         "ataque": 4,
         "vida": 3,
+        "arte": "images/CORE/Unidade/CORE_025.webp",
         "efeito": "onPlay:tempBuff(2,0,all_friendly_units)"
     },
     {
+        "tipo": "Unidade",
         "id": "CORE_026",
         "nome": "Cão de Guerra",
-        "tipo": "Unidade",
         "nacao": "Kragmar",
         "tituloNacao": "O Dente de Kragmar",
-        "custo": 2,
         "descricao": "Ímpeto.",
+        "custo": 2,
         "ataque": 2,
         "vida": 2,
-        "keywords": [
-            "Ímpeto"
-        ]
+        "arte": "images/CORE/Unidade/CORE_026.webp"
     },
     {
+        "tipo": "Unidade",
         "id": "CORE_027",
         "nome": "Devastador de Kragmar",
-        "tipo": "Unidade",
         "nacao": "Kragmar",
         "tituloNacao": "O Terremoto de Kragmar",
-        "custo": 5,
         "descricao": "Quando esta unidade ataca, cause 1 de dano a todas as outras unidades.",
+        "custo": 5,
         "ataque": 5,
         "vida": 4,
+        "arte": "images/CORE/Unidade/CORE_027.webp",
         "efeito": "onAttack:damage(1,all_units)"
     },
     {
@@ -362,30 +364,29 @@ export const databaseCartas = [
         "vida": 6
     },
     {
+        "tipo": "Unidade",
         "id": "CORE_029",
         "nome": "Goblin Atirador de Lança",
-        "tipo": "Unidade",
         "nacao": "Kragmar",
         "tituloNacao": "A Ponta de Kragmar",
-        "custo": 2,
         "descricao": "Ao entrar em campo, cause 1 de dano ao General inimigo.",
+        "custo": 2,
         "ataque": 3,
         "vida": 1,
+        "arte": "images/CORE/Unidade/CORE_029.webp",
         "efeito": "onPlay:damage(1, opponent_general)"
     },
     {
+        "tipo": "Unidade",
         "id": "CORE_030",
         "nome": "Goblin Frenético",
-        "tipo": "Unidade",
         "nacao": "Kragmar",
         "tituloNacao": "O Caos de Kragmar",
-        "custo": 1,
         "descricao": "Ímpeto. Último Suspiro: Cause 1 de dano ao General inimigo.",
+        "custo": 1,
         "ataque": 1,
         "vida": 1,
-        "keywords": [
-            "Ímpeto"
-        ],
+        "arte": "images/CORE/Unidade/CORE_030.webp",
         "efeito": "onDeath:damage(1, opponent_general)"
     },
     {
@@ -1306,13 +1307,13 @@ export const databaseCartas = [
         "tituloNacao": "A Ordem Encarnada",
         "descricao": "A primeira unidade que seu oponente joga a cada turno custa 1 a mais.",
         "vida": 32,
-        "arte": "images/EXP1/General/EXP1_001.png",
+        "arte": "images/EXP1/General/EXP1_001.webp",
         "segundaFace": {
             "nome": "Lumina, Vontade de Cristal",
             "ataque": 0,
             "vida": 35,
             "descricao": "As unidades do oponente entram em campo 'adormecidas' (não podem atacar ou usar habilidades por um turno).",
-            "arte": "images/EXP1/General/EXP1_001_face2.png"
+            "arte": "images/EXP1/General/EXP1_001_face2.webp"
         },
         "condicaoTransformacao": {
             "tipo": "CHEGAR_TURNO",

@@ -6,7 +6,7 @@ import { collection, getDocs, doc, setDoc, deleteDoc, getDoc } from 'https://www
 
 export const DeckBuilder = {
     // --- Configurações ---
-    MAX_DECK_SIZE: 40,
+    MAX_DECK_SIZE: 39,
     MAX_COPIES: 3,
 
     // --- Estado Interno ---
