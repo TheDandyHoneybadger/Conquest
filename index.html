@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conquest Card Game</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/card.css">
+    <link rel="stylesheet" href="css/deckbuilder.css">
+    <link rel="stylesheet" href="css/game.css">
+</head>
+<body>
+
+    <div id="auth-screen" class="screen">
+        <div class="container">
+            <h2>Login / Cadastro</h2>
+            <input type="email" id="email-input" placeholder="Email">
+            <input type="password" id="password-input" placeholder="Senha">
+            <button id="login-btn">Entrar</button>
+            <button id="signup-btn">Cadastrar</button>
+        </div>
+    </div>
+
+    <div id="main-menu-screen" class="screen hidden">
+        <div class="container">
+            <h2 id="welcome-message">Bem-vindo!</h2>
+            <button id="goto-lobby-btn">Jogar Online</button>
+            <button id="goto-deckbuilder-btn">Editor de Decks</button>
+            <button id="logout-btn">Sair</button>
+        </div>
+    </div>
+
+    <div id="lobby-list-screen" class="screen hidden">
+        <div class="container" style="width: 50%; max-width: 600px;">
+            <h2>Salas Abertas</h2>
+            <div id="room-list-container">
+                <p>A carregar...</p>
+            </div>
+            <button id="create-room-btn">Criar Sala</button>
+            <button id="refresh-rooms-btn">Atualizar</button>
+            <button id="lobby-back-to-menu-btn">Voltar ao Menu</button>
+        </div>
+    </div>
+
+    <div id="room-wait-screen" class="screen hidden">
+        <div class="container">
+            <h2 id="room-wait-title">Aguardando...</h2>
+            <p id="player1-name-slot">Jogador 1: ...</p>
+            <p id="player2-name-slot">Jogador 2: Aguardando...</p>
+            <button id="leave-room-btn">Sair da Sala</button>
+        </div>
+    </div>
+
+    <div id="deck-builder-screen" class="screen hidden">
+        <div class="deck-builder-container">
+            <div class="deck-builder-ui">
+                <div class="deck-builder-side-panel-left">
+                    <div id="deckbuilder-card-preview">
+                        <div class="card-preview-display"></div>
+                        <div class="card-preview-content">
+                            <div id="deckbuilder-card-preview-descricao"></div>
+                        </div>
+                    </div>
+                    <div class="deck-controls">
+                        <select id="deck-select"></select>
+                        <div class="deck-management-controls">
+                             <div class="deck-buttons-group">
+                                <button id="new-deck-btn">Novo</button>
+                                <button id="rename-deck-btn">Renomear</button>
+                                <button id="delete-deck-btn">Apagar</button>
+                                <button id="clear-deck-btn">Limpar</button>
+                            </div>
+                            <button id="set-active-deck-btn">Definir Principal</button>
+                            <button id="save-deck-btn">Salvar Deck</button>
+                        </div>
+                        <button id="back-to-menu-btn">Voltar ao Menu</button>
+                    </div>
+                </div>
+                <div class="deck-builder-main-panel">
+                    <div class="card-collection">
+                        <div class="collection-header">
+                            <div class="collection-filter">
+                                <label for="collection-select">Filtrar por Edição:</label>
+                                <select id="collection-select"></select>
+                            </div>
+                        </div>
+                        <div class="collection-scroll-area"></div>
+                    </div>
+                </div>
+                <div class="deck-builder-side-panel-right">
+                    <div class="deck-construction-area">
+                        <h3 id="deck-count">Deck (0 / 40)</h3>
+                        <div id="general-display-area" class="general-display-area">
+                            <span>Arraste um General aqui</span>
+                        </div>
+                        <div id="deck-list-area"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+       
+        <div id="popup-overlay" class="hidden">
+            <div id="popup-box">
+                <h3 id="popup-title">Nome do Deck</h3>
+                <input type="text" id="popup-input">
+                <div id="popup-buttons">
+                    <button id="popup-cancel-btn">Cancelar</button>
+                    <button id="popup-confirm-btn">Confirmar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="game-screen" class="screen hidden">
+        <div class="game-ui-panel left-panel">
+            <div id="game-card-preview">
+                <div id="game-card-preview-display"></div>
+                <div id="game-card-preview-content"></div>
+            </div>
+            <div class="game-log-container">
+                <h3>Log do Jogo</h3>
+                <div id="game-log" class="game-log"></div>
+            </div>
+        </div>
+    
+        <div id="field">
+            <div class="match-score">
+                <span id="oponente-score">0</span>
+                <span>-</span>
+                <span id="jogador-score">0</span>
+            </div>
+
+            <div id="mao-oponente" class="mao"></div>
+            <div class="tabuleiro oponente">
+                <div class="lado-jogador oponente">
+                    <div id="oponente-deck" class="zona"></div>
+                    <div id="oponente-s2" class="zona"></div>
+                    <div id="oponente-general" class="zona general"></div>
+                    <div id="oponente-s1" class="zona"></div>
+                    <div id="oponente-cemiterio" class="zona"></div>
+                    <div id="oponente-u3" class="zona"></div>
+                    <div id="oponente-u2" class="zona"></div>
+                    <div id="oponente-u1" class="zona"></div>
+                </div>
+            </div>
+
+            <div id="area-de-conflito"></div>
+
+            <div class="tabuleiro jogador">
+                <div class="lado-jogador jogador">
+                    <div id="jogador-u1" class="zona"></div>
+                    <div id="jogador-u2" class="zona"></div>
+                    <div id="jogador-u3" class="zona"></div>
+                    <div id="jogador-cemiterio" class="zona"></div>
+                    <div id="jogador-s1" class="zona"></div>
+                    <div id="jogador-general" class="zona general"></div>
+                    <div id="jogador-s2" class="zona"></div>
+                    <div id="jogador-deck" class="zona"></div>
+                </div>
+            </div>
+            <div id="mao-jogador" class="mao"></div>
+        </div>
+    
+        <div class="game-ui-panel right-panel">
+            <div id="phase-track" class="phase-track"></div>
+            <div class="menu-buttons">
+                <button id="passar-prioridade-btn" class="menu-button">Passar Prioridade</button>
+                <button id="admitir-derrota-btn" class="menu-button defeat-button">Admitir Derrota</button>
+            </div>
+            <div class="chat-container">
+                <h3>Chat</h3>
+                <div id="chat-messages" class="chat-messages"></div>
+                <input type="text" id="chat-input" placeholder="Digite sua mensagem...">
+            </div>
+        </div>
+
+        <div id="dice-roll-overlay" class="overlay hidden">
+            <div class="overlay-content">
+                <h2 id="dice-roll-title">A decidir quem começa...</h2>
+                <div class="dice-roll-container">
+                    <div class="dice-player">
+                        <span id="dice-player-name">Jogador 1</span>
+                        <div id="dice-player-result" class="dice-result">?</div>
+                    </div>
+                    <div class="dice-player">
+                        <span id="dice-opponent-name">Jogador 2</span>
+                        <div id="dice-opponent-result" class="dice-result">?</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js/ui/main.js"></script>
+</body>
+</html>
