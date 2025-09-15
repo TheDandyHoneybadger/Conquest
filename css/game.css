@@ -117,7 +117,7 @@
 }
 
 #game-card-preview-content h3 { 
-    font-size: 1.2em; 
+    font-size: 1.0em; 
     color: var(--cor-destaque); 
     margin: 0 0 8px; 
     font-family: 'Lora', serif;
@@ -220,20 +220,25 @@
     display: grid; 
     grid-template-areas: 
         "vazio1 u1 u2 u3 vazio2"
-        "cemiterio s1 g s2 deck"; /* <<< MODIFIQUE AQUI - layout reorganizado com general centralizado */
-    grid-template-columns: 1fr 1fr 1fr 1fr 1fr; /* <<< MODIFIQUE AQUI - colunas iguais para centralizar o general */
+        "cemiterio s1 g s2 deck";
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
     grid-template-rows: auto auto; 
     gap: 0.8vh; 
     width: 100%; 
-    max-width: 650px; /* <<< MODIFIQUE AQUI - reduzido para cartas menores */
-    padding: 0 1vw; /* <<< MODIFIQUE AQUI - padding reduzido */
-    justify-items: center; /* <<< MODIFIQUE AQUI - centralizar as zonas */
+    max-width: 650px;
+    padding: 0 1vw;
+    justify-items: center;
 }
 
 .lado-jogador.oponente { 
     grid-template-areas: 
         "deck s2 g s1 cemiterio"
-        "vazio1 u3 u2 u1 vazio2"; /* <<< MODIFIQUE AQUI - oponente espelhado com general centralizado */
+        "vazio1 u3 u2 u1 vazio2";
+}
+
+/* --- ALTERAÇÃO AQUI --- */
+.lado-jogador.oponente .card-container {
+    transform: rotate(180deg);
 }
 
 /* Posicionamento das zonas - ATUALIZADO PARA NOVO LAYOUT */
@@ -269,8 +274,8 @@
     transition: all 0.3s ease;
     width: 100%;
     height: auto;
-    max-width: 120px; /* <<< MODIFIQUE AQUI - tamanho máximo da zona */
-    max-height: 168px; /* <<< MODIFIQUE AQUI - altura máxima baseada no aspect ratio */
+    max-width: 120px;
+    max-height: 168px;
 }
 
 /* Cartas dentro das zonas do jogo devem ocupar 100% da zona */
@@ -281,7 +286,7 @@
 }
 
 .zona .carta {
-    font-size: 4px !important; /* <<< MODIFIQUE AQUI - tamanho da fonte nas cartas do jogo */
+    font-size: 4px !important;
     width: 100%;
     height: 100%;
 }
@@ -694,7 +699,7 @@
     }
     
     .zona {
-        max-width: 100px; /* <<< MODIFIQUE AQUI - zonas menores em telas pequenas */
+        max-width: 100px;
         max-height: 140px;
     }
 }
@@ -716,16 +721,16 @@
     }
     
     .lado-jogador {
-        max-width: 500px; /* <<< MODIFIQUE AQUI - ainda menor em mobile */
+        max-width: 500px;
         gap: 0.5vh;
     }
     
     .zona {
-        max-width: 80px; /* <<< MODIFIQUE AQUI - zonas bem pequenas em mobile */
+        max-width: 80px;
         max-height: 112px;
     }
     
     .zona .carta {
-        font-size: 3px !important; /* <<< MODIFIQUE AQUI - fonte menor em mobile */
+        font-size: 3px !important;
     }
 }

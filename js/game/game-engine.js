@@ -1,4 +1,4 @@
-// js/game/game-engine.js
+// js/game-engine.js
 
 import { Game } from './game.js';
 import { showPreview } from './game-renderer.js';
@@ -67,6 +67,7 @@ export const EffectEngine = {
             context.sourceCard.owner.experiencia += amount;
             Game.log('Efeito', `${context.sourceCard.owner.nome} ganha ${amount} de EXP.`);
         },
+        // --- LÓGICA DE UID CORRIGIDA ---
         spawn: (params, context) => {
             const tokenName = params[0];
             const tokenAtk = parseInt(params[1], 10);
@@ -76,7 +77,8 @@ export const EffectEngine = {
             if (emptySlots.length > 0) {
                 const randomSlot = emptySlots[Math.floor(Math.random() * emptySlots.length)];
                 const tokenInfo = { nome: tokenName, tipo: 'Unidade', nacao: player.general.nacao, ataque: tokenAtk, vida: tokenVida, descricao: 'Uma criatura invocada.' };
-                const token = new Carta(tokenInfo, Game.proximoUID++, player);
+                const tokenUID = `${player.uid}_token_${Game.proximoUID++}`;
+                const token = new Carta(tokenInfo, tokenUID, player);
                 player.campo[randomSlot] = token;
                 token.slot = randomSlot;
                 Game.log('Efeito', `${player.nome} cria um ${tokenName} ${tokenAtk}/${tokenVida}.`);
@@ -85,6 +87,7 @@ export const EffectEngine = {
                  Game.log('Sistema', `Não há espaço para criar ${tokenName}.`);
             }
         },
+        // --- FIM DA CORREÇÃO ---
         returnToHand: (params, context) => {
             const targets = Game.resolveAlvo(params[0], context);
             targets.forEach(target => {
@@ -332,4 +335,3 @@ export class Jogador {
         }
     }
 }
-

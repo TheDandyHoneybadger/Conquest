@@ -122,13 +122,20 @@ function renderizarPilha() {
             conflictZoneEl.appendChild(el);
         }
     });
+
     if (resolveBtn) {
-        resolveBtn.textContent = `Passar (J${Game.jogadorComPrioridade + 1})`;
+        const playerWithPriority = Game.jogadores[Game.jogadorComPrioridade];
+        if (playerWithPriority) {
+            resolveBtn.textContent = `Passar Prioridade (${playerWithPriority.nome})`;
+        }
+        
         resolveBtn.disabled = Game.controleAtivo !== Game.jogadorComPrioridade || Game.estado === STATES.RESOLVING_STACK;
-        const isHidden = Game.estado === STATES.FREE || Game.estado === STATES.DECLARING_ATTACK || Game.estado === STATES.GAME_OVER;
+        
+        const isHidden = Game.pilhaDeEfeitos.length === 0 || Game.estado === STATES.GAME_OVER;
         resolveBtn.classList.toggle('hidden', isHidden);
     }
 }
+
 
 /**
  * Atualiza o visual dos orbes de fase.
@@ -298,16 +305,20 @@ function renderizarInterfaceCombate() {
 }
 
 export function updateScoreDisplay(scores, localPlayerUid, jogadores) {
-    if (!scores) return;
-    const jogadorLocal = jogadores.find(j => j.uid === localPlayerUid);
-    const oponente = jogadores.find(j => j.uid !== localPlayerUid);
+    if (!scores || !jogadores || jogadores.length < 2) return;
+    
+    const localPlayerScore = scores[localPlayerUid] || 0;
+    const opponentUid = jogadores.find(j => j.uid !== localPlayerUid)?.uid;
+    const opponentScore = opponentUid ? (scores[opponentUid] || 0) : 0;
 
-    const jogadorScoreEl = document.getElementById('jogador-score-display');
-    const oponenteScoreEl = document.getElementById('oponente-score-display');
+    // --- CORREÇÃO AQUI ---
+    const jogadorScoreEl = document.getElementById('jogador-score');
+    const oponenteScoreEl = document.getElementById('oponente-score');
 
-    if (jogadorLocal && jogadorScoreEl) jogadorScoreEl.textContent = scores[jogadorLocal.uid] || 0;
-    if (oponente && oponenteScoreEl) oponenteScoreEl.textContent = scores[oponente.uid] || 0;
+    if (jogadorScoreEl) jogadorScoreEl.textContent = localPlayerScore;
+    if (oponenteScoreEl) oponenteScoreEl.textContent = opponentScore;
 }
+
 
 export function showDiceRollResult(roomData, localPlayerUid) {
     const overlay = document.getElementById('dice-roll-overlay');
@@ -320,24 +331,24 @@ export function showDiceRollResult(roomData, localPlayerUid) {
     const p1_data = roomData.players[p1_uid];
     const p2_data = roomData.players[p2_uid];
 
-    const p1_el = document.getElementById('dice-roll-p1');
-    const p2_el = document.getElementById('dice-roll-p2');
-    const winner_el = document.getElementById('dice-roll-winner');
+    const playerNameEl = document.getElementById('dice-player-name');
+    const opponentNameEl = document.getElementById('dice-opponent-name');
+    const playerResultEl = document.getElementById('dice-player-result');
+    const opponentResultEl = document.getElementById('dice-opponent-result');
+    const titleEl = document.getElementById('dice-roll-title');
 
-    if (p1_el && p1_data) {
-        p1_el.querySelector('.dice-player-name').textContent = p1_data.displayName;
-        p1_el.querySelector('.dice-result').textContent = roomData.diceRolls[p1_uid] || '?';
-    }
-    if (p2_el && p2_data) {
-        p2_el.querySelector('.dice-player-name').textContent = p2_data.displayName;
-        p2_el.querySelector('.dice-result').textContent = roomData.diceRolls[p2_uid] || '?';
+    if (p1_data && p2_data) {
+        playerNameEl.textContent = p1_data.displayName;
+        opponentNameEl.textContent = p2_data.displayName;
+        playerResultEl.textContent = roomData.diceRolls[p1_uid] || '?';
+        opponentResultEl.textContent = roomData.diceRolls[p2_uid] || '?';
     }
 
-    if (roomData.startingPlayerUid && winner_el) {
+    if (roomData.startingPlayerUid && titleEl) {
         const winnerName = roomData.players[roomData.startingPlayerUid]?.displayName || 'Jogador';
-        winner_el.textContent = `${winnerName} começa!`;
-    } else if(winner_el) {
-        winner_el.textContent = '';
+        titleEl.textContent = `${winnerName} começa!`;
+    } else if(titleEl) {
+        titleEl.textContent = 'A decidir quem começa...';
     }
 }
 

@@ -12,14 +12,33 @@ let unsubscribeFromRoom = null;
 let unsubscribeFromActions = null;
 let currentRoomId = null;
 
-// --- FUNÇÕES DE CALLBACK DA UI ---
+// --- FUNÇÃO CORRIGIDA E EXPORTADA ---
+export function listenToGameActions(roomId) {
+    if (unsubscribeFromActions) unsubscribeFromActions();
+    
+    const actionsRef = collection(db, 'matches', roomId, 'game_actions');
+    const q = query(actionsRef, orderBy("timestamp", "desc"), limit(1));
+
+    unsubscribeFromActions = onSnapshot(q, (snapshot) => {
+        snapshot.docChanges().forEach((change) => {
+            if (change.type === "added") {
+                const action = change.doc.data();
+                if (action.senderUid !== auth.currentUser.uid) {
+                    Game.handleIncomingAction(action);
+                }
+            }
+        });
+    }, (error) => {
+        console.error("Erro ao escutar ações do jogo:", error);
+    });
+}
+
 export function setOnlineSystemCallbacks(callbacks) {
     showScreenFunc = callbacks.showScreen;
     updateRoomAndWaitScreenFunc = callbacks.updateRoomAndWaitScreen;
     populateRoomListFunc = callbacks.populateRoomList;
 }
 
-// --- AUTENTICAÇÃO ---
 export async function signUpUser(email, password) {
     try {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -51,8 +70,6 @@ export async function signOutUser() {
     }
 }
 
-// --- GESTÃO DE SALAS ---
-// CORREÇÃO: Função reimplementada para buscar e retornar as salas do Firestore.
 export async function getOpenRooms() {
     const roomsRef = collection(db, 'matches');
     const q = query(roomsRef, where("status", "==", "waiting"));
@@ -183,7 +200,6 @@ async function getPrincipalDeck(user) {
     return deckData;
 }
 
-// --- LÓGICA DE JOGO ONLINE ---
 async function rollDice(roomId) {
     const roomRef = doc(db, 'matches', roomId);
     const user = auth.currentUser;
@@ -230,7 +246,8 @@ export async function updateScoreAndStartNewGame(winnerUid) {
             turn: 1, phase: 0,
             currentPlayerUid: startingPlayerUid,
             priorityPlayerUid: startingPlayerUid,
-            winner: null
+            winner: null,
+            consecutivePasses: 0
         };
         await updateDoc(roomRef, {
             scores: newScores,
@@ -247,7 +264,7 @@ export async function sendGameAction(action) {
     await addDoc(actionsRef, actionData);
 }
 
-// --- LISTENERS (OBSERVADORES) ---
+// --- FUNÇÃO CORRIGIDA ---
 function listenToRoomUpdates(roomId) {
     if (unsubscribeFromRoom) unsubscribeFromRoom();
     currentRoomId = roomId;
@@ -289,7 +306,8 @@ function listenToRoomUpdates(roomId) {
                             turn: 1, phase: 0,
                             currentPlayerUid: startingPlayer,
                             priorityPlayerUid: startingPlayer,
-                            winner: null
+                            winner: null,
+                            consecutivePasses: 0
                         };
                         updateDoc(roomRef, {
                             gameState: newGameState,
@@ -302,7 +320,7 @@ function listenToRoomUpdates(roomId) {
             case 'ongoing':
                 if (!Game.isGameRunning) {
                     Game.startMatch(roomData);
-                    listenToGameActions(roomId);
+                    listenToGameActions(roomId); // Inicia o listener aqui
                 } else if (roomData.gameState) {
                     Game.syncGameState(roomData.gameState, roomData.scores);
                 }
@@ -316,21 +334,3 @@ function listenToRoomUpdates(roomId) {
         }
     });
 }
-
-function listenToGameActions(roomId) {
-    if (unsubscribeFromActions) unsubscribeFromActions();
-    const actionsRef = collection(db, 'matches', roomId, 'game_actions');
-    const q = query(actionsRef, orderBy("timestamp", "desc"), limit(1));
-
-    unsubscribeFromActions = onSnapshot(q, (snapshot) => {
-        snapshot.docChanges().forEach((change) => {
-            if (change.type === "added") {
-                const action = change.doc.data();
-                if (action.senderUid !== auth.currentUser.uid) {
-                    Game.handleIncomingAction(action);
-                }
-            }
-        });
-    });
-}
-

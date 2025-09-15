@@ -4,7 +4,7 @@ import { databaseCartas } from '../../data/database.js';
 import { Game } from './game.js';
 import { Carta, Jogador, EffectEngine } from './game-engine.js';
 import { STATES } from './game-constants.js';
-import { updateScoreAndStartNewGame } from '../firebase/online.js';
+import { updateScoreAndStartNewGame, updateGameState } from '../firebase/online.js';
 
 export function setupPlayers(playersData, playerOrder) {
     const jogadores = [];
@@ -30,17 +30,25 @@ export function criarJogador(id, uid, playerData) {
     }
     const jogador = new Jogador(id, uid, JSON.parse(JSON.stringify(generalTemplate)));
     jogador.nome = playerData.displayName;
+    
+    // --- LÓGICA DE UID CORRIGIDA ---
+    let cardCounter = 0; 
     playerData.deck.cards.forEach(cardId => {
         const template = databaseCartas.find(c => c.id === cardId);
         if(template) {
-            const novaCarta = new Carta(JSON.parse(JSON.stringify(template)), Game.proximoUID++, jogador);
+            // Gera um UID único combinando o UID do jogador com um contador
+            const uniqueCardUID = `${uid}_${cardCounter++}`; 
+            const novaCarta = new Carta(JSON.parse(JSON.stringify(template)), uniqueCardUID, jogador);
             jogador.deck.push(novaCarta);
         }
     });
+    // --- FIM DA CORREÇÃO ---
+
     embaralhar(jogador.deck);
     for(let i = 0; i < 5; i++) { jogador.comprarCarta(); }
     return jogador;
 }
+
 
 export function embaralhar(array) {
     for (let i = array.length - 1; i > 0; i--) {
@@ -55,7 +63,7 @@ export function executarLogicaDeFase(){
     if(Game.fase === 0) { 
        if (Game.turno > 1 || Game.jogadores.findIndex(p => p.uid === jogador.uid) === 1) { 
            jogador.experiencia++;
-           // EffectEngine.trigger('onGainExp', { player: jogador, amount: 1, sourceCard: jogador.general });
+           EffectEngine.trigger('onGainExp', { player: jogador, amount: 1, sourceCard: jogador.general });
            Game.log('Sistema', `${jogador.nome} ganhou 1 EXP.`);
        }
    }
@@ -64,7 +72,7 @@ export function executarLogicaDeFase(){
            jogador.comprarCarta();
            Game.log('Sistema', `${jogador.nome} comprou uma carta.`);
        }
-        // EffectEngine.trigger('onTurnStart', { player: jogador, sourceCard: jogador.general });
+        EffectEngine.trigger('onTurnStart', { player: jogador, sourceCard: jogador.general });
    }
 }
 
@@ -104,6 +112,11 @@ export function resolverPilha() {
             Game.estado = STATES.FREE;
             Game.jogadorComPrioridade = Game.jogadorAtual;
             Game.log('Sistema', 'Pilha resolvida.');
+            
+            Game.consecutivePasses = 0; 
+            const newGameState = Game.getCurrentGameState();
+            updateGameState(newGameState);
+
             Game.renderizarTudo();
             return;
         }
@@ -113,7 +126,7 @@ export function resolverPilha() {
 
         if (acao.tipo === 'jogarCarta') executarJogarCarta(acao);
         else if (acao.tipo === 'combate') executarCombate(acao.contexto);
-        // else if (acao.tipo === 'efeito') EffectEngine.execute(acao.contexto.action, acao.contexto);
+        else if (acao.tipo === 'efeito') EffectEngine.execute(acao.contexto.action, acao.contexto);
 
         Game.renderizarTudo();
 
@@ -144,8 +157,8 @@ function executarJogarCarta(acao) {
     }
 
     Game.log('Sistema', `${carta.nome} entra no campo.`);
-    // EffectEngine.trigger('onPlay', { sourceCard: carta, player: dono });
-    // EffectEngine.trigger('onFriendlyUnitPlay', { sourceCard: carta, player: dono });
+    EffectEngine.trigger('onPlay', { sourceCard: carta, player: dono });
+    EffectEngine.trigger('onFriendlyUnitPlay', { sourceCard: carta, player: dono });
 }
 
 function executarCombate(contexto) {
@@ -186,8 +199,8 @@ function checarMortes(unidades) {
             }
             unidade.dono.stats.aliadosMortos++;
 
-            // EffectEngine.trigger('onDeath', { sourceCard: unidade.carta, player: unidade.dono });
-            // EffectEngine.trigger('onFriendlyUnitDeath', { sourceCard: unidade.carta, player: unidade.dono });
+            EffectEngine.trigger('onDeath', { sourceCard: unidade.carta, player: unidade.dono });
+            EffectEngine.trigger('onFriendlyUnitDeath', { sourceCard: unidade.carta, player: unidade.dono });
         }
     });
 }
@@ -202,7 +215,6 @@ function terminarJogo(jogadorDerrotado) {
     updateScoreAndStartNewGame(vencedor.uid);
 }
 
-// CORREÇÃO: Função renomeada para corresponder à importação
 export function parseEffectString(effectString) {
     if (!effectString || !effectString.includes(':')) return null;
     const [condition, actionsPart] = effectString.split(':', 2);
@@ -227,4 +239,3 @@ export function resetRonda() {
     const novosJogadores = setupPlayers(Game.onlineState.players, Game.onlineState.playerOrder);
     Game.jogadores = novosJogadores;
 }
-

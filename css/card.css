@@ -45,6 +45,16 @@
     transform: rotateY(180deg);
 }
 
+/* --- ALTERAÇÃO AQUI --- */
+.carta-verso-jogo {
+    width: 100%;
+    height: 100%;
+    background-image: url('../images/placeholder.png');
+    background-size: cover;
+    background-position: center;
+}
+
+
 .carta-arte {
     position: absolute;
     top: 0;

@@ -71,9 +71,17 @@ export function selecionarBloqueador(bloqueadorCarta, bloqueadorSlot) {
 
 export function iniciarArrasto(evento, carta, slotId, mode){
     evento.preventDefault();
-    const jogador = Game.jogadores[Game.jogadorAtual];
-    const isMyTurn = Game.jogadorAtual === Game.controleAtivo;
-    let podeArrastar = (mode === 'play' && isMyTurn && Game.estado === STATES.FREE && (Game.fase === 2 || Game.fase === 4) && carta.custo <= jogador.experiencia);
+    
+    const jogadorComPrioridade = Game.jogadores[Game.jogadorComPrioridade];
+    const temPrioridade = jogadorComPrioridade.uid === Game.onlineState.localPlayerUid;
+    
+    const podeArrastar = (
+        mode === 'play' && 
+        temPrioridade && 
+        (Game.fase === 2 || Game.fase === 4) && 
+        carta.custo <= jogadorComPrioridade.experiencia
+    );
+
     if (!podeArrastar) return;
 
     Game.dragState = { active: true, mode: mode, el: evento.currentTarget, data: { cartaObj: carta, slotId: slotId } };
@@ -100,30 +108,37 @@ function moverElemento(evento) {
     Game.dragState.clone.style.top = `${evento.clientY - Game.dragState.clone.offsetHeight / 2}px`;
 }
 
+// --- FUNÇÃO CORRIGIDA ---
 function soltarElemento(evento){
     if (!Game.dragState.active) return;
     
+    // Restaura a aparência da carta original
     if (Game.dragState.el) Game.dragState.el.style.opacity = '1';
     
+    // Encontra a zona de destino
     const elPorBaixo = document.elementFromPoint(evento.clientX, evento.clientY);
     const zonaAlvo = elPorBaixo ? elPorBaixo.closest('.zona.valida') : null;
     
+    // Se o destino for válido, envia a ação de jogar a carta
     if (Game.dragState.mode === 'play' && zonaAlvo) {
         Game.jogarCarta(Game.dragState.data.cartaObj, zonaAlvo.id);
     }
     
+    // Limpa os elementos visuais do "arrastar"
     if (Game.dragState.clone) document.body.removeChild(Game.dragState.clone);
-
     document.removeEventListener('mousemove', moverElemento);
     document.removeEventListener('mouseup', soltarElemento);
-
     limparDestaques();
+    
+    // Finaliza o estado de "arrastar"
     Game.dragState = { active: false };
-    Game.renderizarTudo();
+    
+    // A chamada para renderizarTudo() foi REMOVIDA daqui para evitar a "race condition".
+    // A renderização agora acontece apenas depois de a ação ser processada pelo Game.js.
 }
 
 function destacarAlvosValidos() {
-    const jogador = Game.jogadores[Game.jogadorAtual];
+    const jogador = Game.jogadores[Game.controleAtivo]; // O jogador local
     const prefixo = `jogador-`;
     if (Game.dragState.mode === 'play') {
         const carta = Game.dragState.data.cartaObj;
@@ -131,10 +146,14 @@ function destacarAlvosValidos() {
         if (carta.tipo === 'Unidade') slotsValidos = ['u1', 'u2', 'u3'];
         if (carta.tipo === 'Suporte') slotsValidos = ['s1', 's2'];
         slotsValidos.forEach(slot => {
-            if (!jogador.campo[slot]) document.getElementById(prefixo + slot).classList.add('valida');
+            if (!jogador.campo[slot]) {
+                const zonaEl = document.getElementById(prefixo + slot);
+                if (zonaEl) zonaEl.classList.add('valida');
+            }
         });
     }
 }
+
 
 function limparDestaques() {
     document.querySelectorAll('.valida').forEach(el => el.classList.remove('valida'));
@@ -144,10 +163,8 @@ export function mudarFaseManualmente(targetIndex) {
     Game.mudarFaseManualmente(targetIndex);
 }
 
-// CORREÇÃO: Função criada e exportada
 export function admitirDerrota() {
     if (confirm('Tem a certeza que quer admitir a derrota nesta ronda?')) {
         Game.admitirDerrota();
     }
 }
-
