@@ -278,7 +278,7 @@ export const databaseCartas = [
             "nome": "Korgoth, o Imparável",
             "ataque": 3,
             "vida": 30,
-            "descricao": "Suas unidades ganham Ímpeto.",
+            "descricao": "Suas unidades ganham Brutalidade.",
             "arte": "images/CORE/General/CORE_022_face2.webp"
         },
         "condicaoTransformacao": {
@@ -333,7 +333,7 @@ export const databaseCartas = [
         "nome": "Cão de Guerra",
         "nacao": "Kragmar",
         "tituloNacao": "O Dente de Kragmar",
-        "descricao": "Ímpeto.",
+        "descricao": "",
         "custo": 2,
         "ataque": 2,
         "vida": 2,
@@ -382,7 +382,7 @@ export const databaseCartas = [
         "nome": "Goblin Frenético",
         "nacao": "Kragmar",
         "tituloNacao": "O Caos de Kragmar",
-        "descricao": "Ímpeto. Último Suspiro: Cause 1 de dano ao General inimigo.",
+        "descricao": "Último Suspiro: Cause 1 de dano ao General inimigo.",
         "custo": 1,
         "ataque": 1,
         "vida": 1,
@@ -396,11 +396,11 @@ export const databaseCartas = [
         "nacao": "Kragmar",
         "tituloNacao": "A Praga de Kragmar",
         "custo": 1,
-        "descricao": "Ímpeto.",
+        "descricao": "",
         "ataque": 2,
         "vida": 1,
         "keywords": [
-            "Ímpeto"
+            "Brutalidade"
         ]
     },
     {
@@ -410,11 +410,11 @@ export const databaseCartas = [
         "nacao": "Kragmar",
         "tituloNacao": "O Machado de Kragmar",
         "custo": 2,
-        "descricao": "Ímpeto.",
+        "descricao": "",
         "ataque": 3,
         "vida": 1,
         "keywords": [
-            "Ímpeto"
+            "Brutalidade"
         ]
     },
     {
@@ -447,11 +447,11 @@ export const databaseCartas = [
         "nacao": "Kragmar",
         "tituloNacao": "A Garra de Kragmar",
         "custo": 4,
-        "descricao": "Ímpeto, Evasão.",
+        "descricao": "Evasão.",
         "ataque": 3,
         "vida": 3,
         "keywords": [
-            "Ímpeto",
+            "Brutalidade",
             "Evasão"
         ]
     },
@@ -462,8 +462,8 @@ export const databaseCartas = [
         "nacao": "Kragmar",
         "tituloNacao": "A Emboscada de Kragmar",
         "custo": 2,
-        "descricao": "Concede Ímpeto a uma unidade aliada alvo.",
-        "efeito": "onPlay:addKeyword(Ímpeto,target_friendly_unit)"
+        "descricao": "Concede Brutalidade a uma unidade aliada alvo.",
+        "efeito": "onPlay:addKeyword(Brutalidade,target_friendly_unit)"
     },
     {
         "id": "CORE_037",
@@ -582,11 +582,11 @@ export const databaseCartas = [
         "nacao": "Sylvanis",
         "tituloNacao": "O Casco de Sylvanis",
         "custo": 3,
-        "descricao": "Ímpeto.",
+        "descricao": "",
         "ataque": 3,
         "vida": 2,
         "keywords": [
-            "Ímpeto"
+            "Brutalidade"
         ]
     },
     {
@@ -859,11 +859,11 @@ export const databaseCartas = [
         "nacao": "Noxaeterna",
         "tituloNacao": "O Terror de Noxaeterna",
         "custo": 6,
-        "descricao": "Ímpeto, Vínculo Vital.",
+        "descricao": "Vínculo Vital.",
         "ataque": 5,
         "vida": 4,
         "keywords": [
-            "Ímpeto",
+            "Brutalidade",
             "Vínculo Vital"
         ]
     },
@@ -1540,12 +1540,12 @@ export const databaseCartas = [
         "nacao": "Kragmar",
         "tituloNacao": "O Ariete de Kragmar",
         "custo": 3,
-        "descricao": "Ímpeto.",
+        "descricao": "",
         "ataque": 3,
         "vida": 2,
         "arte": "images/EXP1/Unidade/EXP1_025.webp",
         "keywords": [
-            "Ímpeto"
+            "Brutalidade"
         ]
     },
     {
@@ -1850,9 +1850,9 @@ export const databaseCartas = [
         "nacao": "Sylvanis",
         "tituloNacao": "A Caça de Sylvanis",
         "custo": 3,
-        "descricao": "Concede +2/+2 e Ímpeto a uma unidade aliada alvo.",
+        "descricao": "Concede +2/+2 e Brutalidade a uma unidade aliada alvo.",
         "arte": "images/EXP1/Ação/EXP1_043.webp",
-        "efeito": "onPlay:buff(2,2,target_friendly_unit),addKeyword(Ímpeto,target_friendly_unit)"
+        "efeito": "onPlay:buff(2,2,target_friendly_unit),addKeyword(Brutalidade,target_friendly_unit)"
     },
     {
         "id": "EXP1_043",
@@ -2083,7 +2083,7 @@ export const databaseCartas = [
         "nacao": "Noxaeterna",
         "tituloNacao": "A Traição de Noxaeterna",
         "custo": 4,
-        "descricao": "Tome o controle de uma unidade inimiga 'adormecida' até o final do turno. Ela ganha Ímpeto.",
+        "descricao": "Tome o controle de uma unidade inimiga 'adormecida' até o final do turno. Ela ganha Brutalidade.",
         "arte": "images/EXP1/Ação/EXP1_062.webp",
         "efeito": "onPlay:mindControl(target_enemy_unit)"
     },

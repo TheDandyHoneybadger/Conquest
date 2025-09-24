@@ -31,20 +31,19 @@ export function criarJogador(id, uid, playerData) {
     const jogador = new Jogador(id, uid, JSON.parse(JSON.stringify(generalTemplate)));
     jogador.nome = playerData.displayName;
     
-    // --- LÓGICA DE UID CORRIGIDA ---
     let cardCounter = 0; 
+    // A lista de cartas agora chega pré-embaralhada do Firebase
     playerData.deck.cards.forEach(cardId => {
         const template = databaseCartas.find(c => c.id === cardId);
         if(template) {
-            // Gera um UID único combinando o UID do jogador com um contador
             const uniqueCardUID = `${uid}_${cardCounter++}`; 
             const novaCarta = new Carta(JSON.parse(JSON.stringify(template)), uniqueCardUID, jogador);
             jogador.deck.push(novaCarta);
         }
     });
-    // --- FIM DA CORREÇÃO ---
 
-    embaralhar(jogador.deck);
+    // A linha de embaralhar é removida daqui, pois a ordem já vem do Firebase.
+    
     for(let i = 0; i < 5; i++) { jogador.comprarCarta(); }
     return jogador;
 }
@@ -60,15 +59,18 @@ export function embaralhar(array) {
 export function executarLogicaDeFase(){
     const jogador = Game.jogadores[Game.jogadorAtual];
     if(!jogador) return;
+
+    // Regra: não ganhar XP no primeiro turno
     if(Game.fase === 0) { 
-       if (Game.turno > 1 || Game.jogadores.findIndex(p => p.uid === jogador.uid) === 1) { 
+       if (Game.turno > 1 || Game.jogadorAtual !== 0) { 
            jogador.experiencia++;
            EffectEngine.trigger('onGainExp', { player: jogador, amount: 1, sourceCard: jogador.general });
            Game.log('Sistema', `${jogador.nome} ganhou 1 EXP.`);
        }
    }
+   // Regra: não comprar carta no primeiro turno
    else if(Game.fase === 1) { 
-       if (!(Game.turno === 1 && Game.jogadores.findIndex(p => p.uid === jogador.uid) === 0)) { 
+       if (!(Game.turno === 1 && Game.jogadorAtual === 0)) { 
            jogador.comprarCarta();
            Game.log('Sistema', `${jogador.nome} comprou uma carta.`);
        }
@@ -152,7 +154,7 @@ function executarJogarCarta(acao) {
     dono.campo[slotId] = carta;
     carta.slot = slotId;
 
-    if (carta.activeKeywords.has('Ímpeto')) {
+    if (carta.tipo === 'Unidade') {
         carta.podeAtacar = true;
     }
 
@@ -169,8 +171,23 @@ function executarCombate(contexto) {
     Game.log('Sistema', `Combate: ${atacante.carta.nome} (${atacante.carta.ataqueAtual}/${atacante.carta.vidaAtual}) vs ${defensor.carta.nome} (${defensor.carta.ataqueAtual}/${defensor.carta.vidaAtual}).`);
     
     const danoNoDefensor = atacante.carta.ataqueAtual;
+    const vidaOriginalDefensor = defensor.carta.vidaAtual;
+
     if (danoNoDefensor > 0) {
         defensor.carta.vidaAtual -= danoNoDefensor;
+    }
+
+    const hasTrample = atacante.carta.activeKeywords.has('Brutalidade') || atacante.carta.activeKeywords.has('Atropelar');
+    if (hasTrample && defensor.carta.tipo === 'Unidade') {
+        const danoExcedente = danoNoDefensor - vidaOriginalDefensor;
+        if (danoExcedente > 0) {
+            const oponente = defensor.dono;
+            oponente.general.vidaAtual -= danoExcedente;
+            Game.log('Efeito', `${atacante.carta.nome} usa Brutalidade/Atropelar para causar ${danoExcedente} de dano excedente ao General inimigo.`);
+            if (oponente.general.vidaAtual <= 0) {
+                terminarJogo(oponente);
+            }
+        }
     }
     
     if (defensor.carta.tipo === 'Unidade' || (defensor.carta.tipo === 'General' && defensor.carta.ataqueAtual > 0)) {

@@ -26,18 +26,10 @@ export function renderizarTudo() {
 
 /**
  * Renderiza um lado do campo de batalha (jogador ou oponente).
- * @param {string} prefixo - "jogador" ou "oponente".
- * @param {import('./game-engine.js').Jogador} jogador - O objeto do jogador a ser renderizado.
  */
 function renderizarLadoDoCampo(prefixo, jogador) {
-    // Renderiza informações do general
-    const generalInfoEl = document.getElementById(`${prefixo}-general-info`);
-    if (generalInfoEl) {
-        const xpEl = generalInfoEl.querySelector('.general-xp');
-        if (xpEl) xpEl.textContent = jogador.experiencia;
-    }
-    
-    // Renderiza as zonas do campo
+    renderizarPlayerStats(prefixo, jogador);
+
     Object.keys(jogador.campo).forEach(slot => {
         const zonaEl = document.getElementById(`${prefixo}-${slot}`);
         if (zonaEl) {
@@ -55,8 +47,6 @@ function renderizarLadoDoCampo(prefixo, jogador) {
 
 /**
  * Renderiza as mãos de ambos os jogadores.
- * @param {import('./game-engine.js').Jogador} localPlayer 
- * @param {import('./game-engine.js').Jogador} opponentPlayer 
  */
 export function renderizarMaos(localPlayer, opponentPlayer) {
     const maoJogadorEl = document.getElementById('mao-jogador');
@@ -70,14 +60,13 @@ export function renderizarMaos(localPlayer, opponentPlayer) {
     const maoOponenteEl = document.getElementById('mao-oponente');
     maoOponenteEl.innerHTML = '';
     opponentPlayer.mao.forEach(carta => {
-        maoOponenteEl.appendChild(carta.criarElementoVerso());
+        const el = carta.criarElementoVerso();
+        maoOponenteEl.appendChild(el);
     });
 }
 
 /**
  * Renderiza as pilhas de deck e cemitério para um jogador.
- * @param {string} prefixo - "jogador" ou "oponente".
- * @param {import('./game-engine.js').Jogador} jogador 
  */
 function renderizarDeckECemiterio(prefixo, jogador) {
     const deckZone = document.getElementById(`${prefixo}-deck`);
@@ -105,6 +94,7 @@ function renderizarDeckECemiterio(prefixo, jogador) {
             el.appendChild(count);
             cemiterioZone.appendChild(el);
         }
+        cemiterioZone.onclick = () => showCemeteryPopup(jogador);
     }
 }
 
@@ -175,7 +165,6 @@ export function criarOrbesDeFase() {
 
 /**
  * Mostra a pré-visualização de uma carta.
- * @param {import('./game-engine.js').Carta} cardData 
  */
 export function showPreview(cardData) {
     const display = document.getElementById('game-card-preview-display');
@@ -184,7 +173,7 @@ export function showPreview(cardData) {
     if (!display || !content) return; 
     
     if (cardData) {
-        const cardEl = cardData.criarElementoHTML(true); // Passa true para indicar que é para a pré-visualização
+        const cardEl = cardData.criarElementoHTML(true); 
         
         display.innerHTML = '';
         display.appendChild(cardEl);
@@ -206,15 +195,15 @@ export function showPreview(cardData) {
 
 /**
  * Adiciona listeners de clique para ataque e defesa.
- * @param {HTMLElement} cartaEl - O elemento HTML da carta.
- * @param {import('./game-engine.js').Carta} carta - O objeto da carta.
- * @param {string} slot - O slot da carta.
  */
 function adicionarListenersDeCombate(cartaEl, carta, slot) {
     const jogadorAtivo = Game.jogadores[Game.jogadorAtual];
     const oponente = Game.jogadores[(Game.jogadorAtual + 1) % 2];
 
-    if (Game.fase === 3 && carta.owner === jogadorAtivo && carta.podeAtacar && carta.tipo === 'Unidade' && Game.estado === STATES.FREE && Game.jogadorAtual === Game.controleAtivo) {
+    // NOVA VERIFICAÇÃO: Impede o primeiro jogador de atacar no primeiro turno.
+    const isFirstPlayerFirstTurn = Game.turno === 1 && Game.jogadorAtual === 0;
+
+    if (!isFirstPlayerFirstTurn && Game.fase === 3 && carta.owner === jogadorAtivo && carta.podeAtacar && carta.tipo === 'Unidade' && Game.estado === STATES.FREE && Game.jogadorAtual === Game.controleAtivo) {
         cartaEl.classList.add('atacante-valido');
         cartaEl.addEventListener('click', () => selecionarAtacante(carta, slot));
     }
@@ -311,7 +300,6 @@ export function updateScoreDisplay(scores, localPlayerUid, jogadores) {
     const opponentUid = jogadores.find(j => j.uid !== localPlayerUid)?.uid;
     const opponentScore = opponentUid ? (scores[opponentUid] || 0) : 0;
 
-    // --- CORREÇÃO AQUI ---
     const jogadorScoreEl = document.getElementById('jogador-score');
     const oponenteScoreEl = document.getElementById('oponente-score');
 
@@ -338,16 +326,16 @@ export function showDiceRollResult(roomData, localPlayerUid) {
     const titleEl = document.getElementById('dice-roll-title');
 
     if (p1_data && p2_data) {
-        playerNameEl.textContent = p1_data.displayName;
-        opponentNameEl.textContent = p2_data.displayName;
-        playerResultEl.textContent = roomData.diceRolls[p1_uid] || '?';
-        opponentResultEl.textContent = roomData.diceRolls[p2_uid] || '?';
+        if (playerNameEl) playerNameEl.textContent = p1_data.displayName;
+        if (opponentNameEl) opponentNameEl.textContent = p2_data.displayName;
+        if (playerResultEl) playerResultEl.textContent = roomData.diceRolls[p1_uid] || '?';
+        if (opponentResultEl) opponentResultEl.textContent = roomData.diceRolls[p2_uid] || '?';
     }
 
     if (roomData.startingPlayerUid && titleEl) {
         const winnerName = roomData.players[roomData.startingPlayerUid]?.displayName || 'Jogador';
         titleEl.textContent = `${winnerName} começa!`;
-    } else if(titleEl) {
+    } else if (titleEl) {
         titleEl.textContent = 'A decidir quem começa...';
     }
 }
@@ -365,32 +353,87 @@ export function setupUI() {
         admitirDerrotaBtn.onclick = () => admitirDerrota();
     }
 
+    const passarPrioridadeBtn = document.getElementById('passar-prioridade-btn');
+    if (passarPrioridadeBtn) {
+        passarPrioridadeBtn.addEventListener('click', () => Game.passarPrioridade());
+    }
+    
+    // Setup do popup do cemitério
+    const cemeteryPopup = document.getElementById('cemetery-popup');
+    const closeBtn = document.getElementById('cemetery-popup-close-btn');
+    if (cemeteryPopup && closeBtn) {
+        closeBtn.onclick = () => cemeteryPopup.classList.add('hidden');
+        cemeteryPopup.onclick = (e) => {
+            if (e.target === cemeteryPopup) { // Fecha se clicar fora do conteúdo
+                cemeteryPopup.classList.add('hidden');
+            }
+        };
+    }
+
+    // Listeners do Chat (agora centralizados aqui)
     const chatInput = document.getElementById('chat-input');
-    chatInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter' && e.target.value.trim()) {
-            Game.enviarMensagemChat(e.target.value);
-            e.target.value = '';
+    const chatSendBtn = document.getElementById('chat-send-btn');
+    
+    const sendChatMessage = () => {
+        if (chatInput && chatInput.value.trim()) {
+            // Supondo que Game.enviarMensagemChat exista
+            Game.enviarMensagemChat(chatInput.value.trim());
+            chatInput.value = '';
         }
-    });
-    document.getElementById('passar-prioridade-btn').addEventListener('click', () => Game.passarPrioridade());
+    };
+
+    if (chatSendBtn) {
+        chatSendBtn.onclick = sendChatMessage;
+    }
+    if (chatInput) {
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendChatMessage();
+            }
+        });
+    }
 }
 
-export function showEndMatchOverlay(winnerName, localPlayerWon) {
-    const overlay = document.createElement('div');
-    overlay.id = 'game-over-overlay';
-    overlay.className = 'overlay';
-    
-    overlay.innerHTML = `
-        <div class="overlay-content">
-            <h2>Fim da Partida</h2>
-            <p>${localPlayerWon ? 'Você venceu!' : 'Você perdeu.'}</p>
-            <p>O vencedor é ${winnerName}!</p>
-            <button id="btn-voltar-menu-final">Voltar ao Menu Principal</button>
-        </div>
-    `;
-    
-    document.body.appendChild(overlay);
-    document.getElementById('btn-voltar-menu-final').onclick = () => {
-        window.location.reload();
-    };
+
+/**
+ * Mostra o popup do cemitério com as cartas do jogador especificado.
+ * @param {import('./game-engine.js').Jogador} jogador
+ */
+function showCemeteryPopup(jogador) {
+    const popup = document.getElementById('cemetery-popup');
+    const title = document.getElementById('cemetery-popup-title');
+    const grid = document.getElementById('cemetery-popup-grid');
+
+    if (!popup || !title || !grid) return;
+
+    title.textContent = `Cemitério de ${jogador.nome}`;
+    grid.innerHTML = ''; // Limpa o conteúdo anterior
+
+    if (jogador.cemiterio.length === 0) {
+        grid.innerHTML = '<p style="color: #ccc; text-align: center;">O cemitério está vazio.</p>';
+    } else {
+        // Itera do mais recente para o mais antigo
+        [...jogador.cemiterio].reverse().forEach(carta => {
+            const cardEl = carta.criarElementoHTML();
+            grid.appendChild(cardEl);
+        });
+    }
+
+    popup.classList.remove('hidden');
+}
+
+/**
+ * Renderiza os stats (vida e xp) do general.
+ * @param {string} prefixo - "jogador" ou "oponente".
+ * @param {import('./game-engine.js').Jogador} jogador
+ */
+function renderizarPlayerStats(prefixo, jogador) {
+    const statsEl = document.getElementById(`${prefixo}-stats-display`);
+    if (!statsEl || !jogador.general) return;
+
+    const vidaEl = statsEl.querySelector('.stat-vida');
+    const xpEl = statsEl.querySelector('.stat-xp');
+
+    if (vidaEl) vidaEl.textContent = jogador.general.vidaAtual;
+    if (xpEl) xpEl.textContent = jogador.experiencia;
 }

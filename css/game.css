@@ -25,6 +25,7 @@
     gap: 10px; 
     overflow: hidden;
     background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    position: relative;
 }
 
 /* ===== CAMPO PRINCIPAL ===== */
@@ -90,6 +91,7 @@
     display: flex; 
     flex-direction: column; 
     gap: 10px; 
+    min-height: 0; /* Para flexbox funcionar corretamente */
 }
 
 #game-card-preview-display { 
@@ -99,6 +101,7 @@
     border-radius: 8px; 
     border: 2px dashed var(--cor-borda-painel-transparente);
     transition: all 0.3s ease;
+    flex-shrink: 0;
 }
 
 #game-card-preview-display:not(:empty) {
@@ -114,6 +117,7 @@
     border-radius: 6px;
     font-size: 0.9em;
     line-height: 1.4;
+    height: 200px; /* ALTURA FIXA PARA A DESCRIÇÃO */
 }
 
 #game-card-preview-content h3 { 
@@ -138,6 +142,7 @@
     flex: 1 1 40%; 
     display: flex; 
     flex-direction: column; 
+    min-height: 0; /* Para flexbox funcionar corretamente */
 }
 
 .game-log-container h3 {
@@ -155,7 +160,6 @@
     background: rgba(0,0,0,0.4); 
     border-radius: 6px; 
     border: 1px solid var(--cor-borda-painel-transparente);
-    max-height: 300px;
 }
 
 .game-log p { 
@@ -188,23 +192,27 @@
 }
 
 #mao-jogador { 
-    transform: translateY(-85px); /* <<< MODIFIQUE AQUI - mude este valor para subir/descer a mão do jogador */
+    transform: translateY(-85px); 
 }
 
 .mao .card-container { 
     width: clamp(80px, 7vw, 120px); 
     transition: transform 0.3s ease, z-index 0.1s ease; 
-    margin: 0 -5px; /* Sobreposição sutil para economizar espaço */
+    margin: 0 -5px; 
 }
 
 .mao .card-container:hover { 
     transform: translateY(-25px) scale(1.15); 
     z-index: 100; 
-    margin: 0 5px; /* Mais espaço quando hover */
+    margin: 0 5px; 
+}
+
+#mao-oponente .card-container {
+    transform: rotate(180deg);
 }
 
 #mao-oponente .card-container:hover { 
-    transform: translateY(25px) scale(1.15); 
+    transform: translateY(25px) scale(1.15) rotate(180deg); 
     z-index: 100; 
 }
 
@@ -214,34 +222,35 @@
     align-items: center; 
     justify-content: center; 
     padding: 10px 0;
+    position: relative;
 }
 
 .lado-jogador { 
     display: grid; 
     grid-template-areas: 
-        "vazio1 u1 u2 u3 vazio2"
+        "vazio1 u1 u2 u3 stats"
         "cemiterio s1 g s2 deck";
-    grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr; /* 5 colunas iguais */
     grid-template-rows: auto auto; 
     gap: 0.8vh; 
     width: 100%; 
-    max-width: 650px;
+    max-width: 800px; /* Aumentado para acomodar a nova coluna */
     padding: 0 1vw;
+    align-items: center;
     justify-items: center;
 }
 
 .lado-jogador.oponente { 
     grid-template-areas: 
         "deck s2 g s1 cemiterio"
-        "vazio1 u3 u2 u1 vazio2";
+        "stats u3 u2 u1 vazio1";
 }
 
-/* --- ALTERAÇÃO AQUI --- */
 .lado-jogador.oponente .card-container {
     transform: rotate(180deg);
 }
 
-/* Posicionamento das zonas - ATUALIZADO PARA NOVO LAYOUT */
+/* Posicionamento das zonas */
 #oponente-cemiterio, #jogador-cemiterio { grid-area: cemiterio; }
 #oponente-s1, #jogador-s1 { grid-area: s1; }
 #oponente-g, #jogador-g { grid-area: g; }
@@ -251,9 +260,8 @@
 #oponente-u2, #jogador-u2 { grid-area: u2; }
 #oponente-u3, #jogador-u3 { grid-area: u3; }
 #oponente-vazio1, #jogador-vazio1 { grid-area: vazio1; }
-#oponente-vazio2, #jogador-vazio2 { grid-area: vazio2; }
+#oponente-stats-display, #jogador-stats-display { grid-area: stats; }
 
-/* ===== ZONAS VAZIAS (INVISÍVEIS) ===== */
 .zona-vazia {
     opacity: 0;
     pointer-events: none;
@@ -261,7 +269,6 @@
     background: transparent !important;
 }
 
-/* ===== ZONAS DO CAMPO ===== */
 .zona { 
     border: 2px solid var(--cor-borda-painel-transparente); 
     border-radius: 10px; 
@@ -278,7 +285,6 @@
     max-height: 168px;
 }
 
-/* Cartas dentro das zonas do jogo devem ocupar 100% da zona */
 .zona .card-container {
     width: 100% !important;
     height: 100% !important;
@@ -293,6 +299,16 @@
 
 .zona:hover {
     background: rgba(0,0,0,0.3);
+}
+
+/* ESTILO DO CEMITÉRIO */
+.zona.cemiterio {
+    background-color: rgba(10, 0, 0, 0.4); /* Fundo mais escuro */
+    cursor: pointer;
+}
+.zona.cemiterio:hover {
+    border-color: var(--cor-destaque);
+    box-shadow: 0 0 10px var(--cor-destaque);
 }
 
 .zona.valida { 
@@ -360,16 +376,6 @@
     color: var(--cor-borda-painel-transparente);
     font-style: italic;
     font-size: 0.9em;
-}
-
-/* ===== INFORMAÇÕES DO GENERAL ===== */
-.general-info-container { 
-    text-align: center; 
-    font-size: 1.2em; 
-    font-weight: bold; 
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8); 
-    color: var(--cor-destaque);
-    font-family: 'Lora', serif;
 }
 
 /* ===== TRACK DE FASES ===== */
@@ -442,7 +448,7 @@
     display: flex; 
     flex-direction: column; 
     gap: 10px; 
-    margin: 10px 0;
+    margin-bottom: 10px;
 }
 
 .menu-button { 
@@ -466,29 +472,28 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-.menu-button:active {
-    transform: translateY(0);
+#passar-prioridade-btn.hidden { 
+    display: none; 
 }
 
+/* BOTÃO DE DESISTIR */
 .menu-button.defeat-button {
     background: linear-gradient(135deg, #8b0000 0%, #660000 100%);
     border-color: #aa0000;
+    margin-top: auto; /* Empurra para o fundo do container flex */
 }
 
 .menu-button.defeat-button:hover {
     background: linear-gradient(135deg, #aa0000 0%, #880000 100%);
 }
 
-#passar-prioridade-btn.hidden { 
-    display: none; 
-}
 
 /* ===== CHAT ===== */
 .chat-container { 
     display: flex; 
     flex-direction: column; 
     flex-grow: 1; 
-    margin-top: 10px;
+    min-height: 0;
 }
 
 .chat-container h3 {
@@ -505,36 +510,43 @@
     padding: 10px; 
     border-radius: 6px; 
     border: 1px solid var(--cor-borda-painel-transparente);
-    max-height: 150px;
     font-size: 0.9em;
 }
 
-.chat-messages p {
-    margin: 0 0 5px;
-    padding: 3px;
-    border-radius: 3px;
-}
+.chat-messages p { margin: 0 0 5px; padding: 3px; border-radius: 3px; }
+.chat-messages p:nth-child(even) { background: rgba(255, 255, 255, 0.05); }
 
-.chat-messages p:nth-child(even) {
-    background: rgba(255, 255, 255, 0.05);
+.chat-input-area {
+    display: flex;
+    margin-top: 10px;
+    margin-bottom: 10px; /* Espaço para o botão de desistir */
+    gap: 5px;
 }
-
 #chat-input { 
-    width: 100%; 
-    margin-top: 10px; 
+    flex-grow: 1;
     background: rgba(30,30,30,0.8); 
     border: 2px solid var(--cor-borda-painel-transparente); 
     color: #e0e0e0; 
-    padding: 10px; 
+    padding: 8px; 
     border-radius: 6px; 
     transition: border-color 0.3s ease;
     font-family: 'Roboto', sans-serif;
 }
-
 #chat-input:focus {
     outline: none;
     border-color: var(--cor-borda-painel);
-    box-shadow: 0 0 8px rgba(164, 128, 66, 0.3);
+}
+#chat-send-btn {
+    padding: 8px 12px;
+    background: var(--cor-borda-painel);
+    border: none;
+    border-radius: 6px;
+    color: #1a1a1a;
+    font-weight: bold;
+    cursor: pointer;
+}
+#chat-send-btn:hover {
+    background: var(--cor-destaque);
 }
 
 /* ===== ESTADOS DE COMBATE ===== */
@@ -582,39 +594,8 @@
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(5px);
 }
+/* ... */
 
-#prompt-bloqueio p {
-    color: #e0e0e0;
-    margin-bottom: 20px;
-    font-size: 1.1em;
-    line-height: 1.4;
-}
-
-#prompt-bloqueio button {
-    margin: 5px 10px;
-    padding: 12px 20px;
-    font-size: 1em;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: all 0.3s ease;
-}
-
-#btn-bloquear-sim {
-    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
-    color: white;
-}
-
-#btn-bloquear-nao {
-    background: linear-gradient(135deg, #f44336 0%, #da190b 100%);
-    color: white;
-}
-
-#prompt-bloqueio button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
 
 /* ===== SETA DE ATAQUE ===== */
 #seta-ataque { 
@@ -627,7 +608,7 @@
     z-index: 99; 
 }
 
-/* ===== OVERLAYS ===== */
+/* ===== OVERLAYS E POPUPS ===== */
 .overlay {
     position: fixed;
     top: 0;
@@ -640,6 +621,7 @@
     justify-content: center;
     z-index: 1000;
 }
+.overlay.hidden { display: none; }
 
 .overlay-content {
     background: var(--cor-painel);
@@ -650,87 +632,74 @@
     max-width: 500px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
+/* ... */
 
-.overlay-content h2 {
+/* POPUP DO CEMITÉRIO */
+.cemetery-popup-content {
+    background: var(--cor-painel);
+    border: 3px solid var(--cor-borda-painel);
+    border-radius: 15px;
+    padding: 20px;
+    width: 80%;
+    max-width: 1000px;
+    height: 80%;
+    display: flex;
+    flex-direction: column;
+}
+.cemetery-popup-content h2 {
     color: var(--cor-destaque);
     font-family: 'Lora', serif;
-    margin-bottom: 20px;
-    font-size: 2em;
+    margin: 0 0 15px;
+    text-align: center;
 }
-
-.overlay-content p {
-    color: #e0e0e0;
-    margin-bottom: 15px;
-    font-size: 1.1em;
+.cemetery-grid {
+    overflow-y: auto;
+    flex-grow: 1;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 15px;
+    padding: 10px;
+    background: rgba(0,0,0,0.3);
+    border-radius: 8px;
 }
-
-.overlay-content button {
-    padding: 12px 24px;
-    font-size: 1.1em;
+.cemetery-grid .card-container {
+    width: 100%;
+}
+.cemetery-grid .carta {
+    font-size: 5px; 
+}
+#cemetery-popup-close-btn {
+    margin-top: 15px;
+    padding: 10px 20px;
+    align-self: center;
     background: var(--cor-borda-painel);
-    color: #1a1a1a;
     border: none;
     border-radius: 8px;
-    cursor: pointer;
     font-weight: bold;
-    margin-top: 20px;
-    transition: all 0.3s ease;
+    cursor: pointer;
 }
 
-.overlay-content button:hover {
-    background: var(--cor-destaque);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+/* STATS DO GENERAL NO CAMPO */
+.general-stats-display {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 8px;
+    background-color: var(--cor-painel-transparente);
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid var(--cor-borda-painel-transparente);
+    color: white;
+    font-size: 1.2em;
+    font-weight: bold;
+    height: fit-content;
+    align-self: center;
 }
 
-/* ===== RESPONSIVIDADE ===== */
-@media (max-width: 1200px) {
-    #game-screen {
-        grid-template-columns: 180px minmax(0, 1fr) 180px;
-    }
-    
-    .game-ui-panel {
-        padding: 12px;
-        gap: 12px;
-    }
-    
-    .mao .card-container {
-        width: clamp(70px, 6vw, 100px);
-    }
-    
-    .zona {
-        max-width: 100px;
-        max-height: 140px;
-    }
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
-
-@media (max-width: 900px) {
-    #game-screen {
-        grid-template-areas: 
-            "main-field"
-            "left-panel"
-            "right-panel";
-        grid-template-columns: 1fr;
-        grid-template-rows: 1fr auto auto;
-        gap: 5px;
-    }
-    
-    .game-ui-panel {
-        max-height: 200px;
-        overflow-y: auto;
-    }
-    
-    .lado-jogador {
-        max-width: 500px;
-        gap: 0.5vh;
-    }
-    
-    .zona {
-        max-width: 80px;
-        max-height: 112px;
-    }
-    
-    .zona .carta {
-        font-size: 3px !important;
-    }
-}
+.stat-item .stat-vida { color: lightgreen; }
+.stat-item .stat-xp { color: var(--cor-destaque); }

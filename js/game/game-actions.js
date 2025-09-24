@@ -4,6 +4,13 @@ import { Game } from './game.js';
 import { STATES } from './game-constants.js';
 
 export function selecionarAtacante(carta, slot) {
+    // NOVA VERIFICAÇÃO: Impede o primeiro jogador de atacar no primeiro turno.
+    const isFirstPlayerFirstTurn = Game.turno === 1 && Game.jogadorAtual === 0;
+    if (isFirstPlayerFirstTurn) {
+        Game.log('Sistema', 'O primeiro jogador não pode atacar no primeiro turno.');
+        return;
+    }
+
     if (Game.estado !== STATES.FREE) return;
     if (carta.isFrozen) {
         Game.log('Sistema', `${carta.nome} está congelado e não pode atacar.`);
@@ -108,37 +115,28 @@ function moverElemento(evento) {
     Game.dragState.clone.style.top = `${evento.clientY - Game.dragState.clone.offsetHeight / 2}px`;
 }
 
-// --- FUNÇÃO CORRIGIDA ---
 function soltarElemento(evento){
     if (!Game.dragState.active) return;
     
-    // Restaura a aparência da carta original
     if (Game.dragState.el) Game.dragState.el.style.opacity = '1';
     
-    // Encontra a zona de destino
     const elPorBaixo = document.elementFromPoint(evento.clientX, evento.clientY);
     const zonaAlvo = elPorBaixo ? elPorBaixo.closest('.zona.valida') : null;
     
-    // Se o destino for válido, envia a ação de jogar a carta
     if (Game.dragState.mode === 'play' && zonaAlvo) {
         Game.jogarCarta(Game.dragState.data.cartaObj, zonaAlvo.id);
     }
     
-    // Limpa os elementos visuais do "arrastar"
     if (Game.dragState.clone) document.body.removeChild(Game.dragState.clone);
     document.removeEventListener('mousemove', moverElemento);
     document.removeEventListener('mouseup', soltarElemento);
     limparDestaques();
     
-    // Finaliza o estado de "arrastar"
     Game.dragState = { active: false };
-    
-    // A chamada para renderizarTudo() foi REMOVIDA daqui para evitar a "race condition".
-    // A renderização agora acontece apenas depois de a ação ser processada pelo Game.js.
 }
 
 function destacarAlvosValidos() {
-    const jogador = Game.jogadores[Game.controleAtivo]; // O jogador local
+    const jogador = Game.jogadores[Game.controleAtivo];
     const prefixo = `jogador-`;
     if (Game.dragState.mode === 'play') {
         const carta = Game.dragState.data.cartaObj;

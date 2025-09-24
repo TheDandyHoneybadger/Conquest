@@ -59,20 +59,22 @@ async function populateRoomList() {
 }
 
 function updateRoomAndWaitScreen(roomData) {
-    document.getElementById('room-wait-title').textContent = `Sala: ${roomData.roomName}`;
+    const roomWaitTitle = document.getElementById('room-wait-title');
+    if (roomWaitTitle) roomWaitTitle.textContent = `Sala: ${roomData.roomName}`;
+    
     const p1Slot = document.getElementById('player1-name-slot');
     const p2Slot = document.getElementById('player2-name-slot');
     
     const player1UID = roomData.playerOrder[0];
     const player1Name = roomData.players[player1UID]?.displayName || 'Aguardando...';
-    p1Slot.textContent = `Jogador 1: ${player1Name}`;
+    if(p1Slot) p1Slot.textContent = `Jogador 1: ${player1Name}`;
 
     if (roomData.playerOrder.length > 1) {
         const player2UID = roomData.playerOrder[1];
         const player2Name = roomData.players[player2UID]?.displayName || 'Aguardando...';
-        p2Slot.textContent = `Jogador 2: ${player2Name}`;
+        if (p2Slot) p2Slot.textContent = `Jogador 2: ${player2Name}`;
     } else {
-        p2Slot.textContent = 'Jogador 2: Aguardando...';
+        if (p2Slot) p2Slot.textContent = 'Jogador 2: Aguardando...';
     }
 }
 
@@ -84,7 +86,6 @@ document.addEventListener('DOMContentLoaded', () => {
     screens.deckBuilder = document.getElementById('deck-builder-screen');
     screens.game = document.getElementById('game-screen');
 
-    // CORREÇÃO: Passa a função showScreen para o Game module
     Game.setScreenChanger(showScreen);
     
     setOnlineSystemCallbacks({
@@ -113,43 +114,59 @@ document.addEventListener('DOMContentLoaded', () => {
 
     onAuthStateChanged(auth, user => {
         if (user) {
-            welcomeMessage.textContent = `Bem-vindo, ${user.email.split('@')[0]}!`;
+            if (welcomeMessage) {
+                welcomeMessage.textContent = `Bem-vindo, ${user.email.split('@')[0]}!`;
+            }
             showScreen('mainMenu');
         } else {
             showScreen('auth');
         }
     });
 
-    buttons.loginBtn.addEventListener('click', () => {
-        const email = inputs.email.value;
-        const password = inputs.password.value;
-        if (email && password) signInUser(email, password);
-    });
-    buttons.signupBtn.addEventListener('click', () => {
-        const email = inputs.email.value;
-        const password = inputs.password.value;
-        if (email && password) signUpUser(email, password);
-    });
-    buttons.logoutBtn.addEventListener('click', signOutUser);
-    buttons.goToLobbyBtn.addEventListener('click', () => {
-        showScreen('lobbyList');
-        populateRoomList();
-    });
-    buttons.createRoomBtn.addEventListener('click', () => {
-        const roomName = prompt("Digite o nome da sua sala:", `Sala de ${auth.currentUser.email.split('@')[0]}`);
-        if (roomName && roomName.trim() !== '') {
-            createRoom(roomName.trim());
-        }
-    });
-    buttons.refreshRoomsBtn.addEventListener('click', populateRoomList);
-    buttons.leaveRoomBtn.addEventListener('click', leaveRoom);
-    buttons.lobbyBackToMenuBtn.addEventListener('click', () => showScreen('mainMenu'));
-    buttons.goToDeckbuilder.addEventListener('click', async () => {
-        showScreen('deckBuilder');
-        await DeckBuilder.init();
-    });
-    buttons.backToMenu.addEventListener('click', () => {
-        showScreen('mainMenu');
-    });
-});
+    if (buttons.loginBtn) {
+        buttons.loginBtn.addEventListener('click', () => {
+            const email = inputs.email.value;
+            const password = inputs.password.value;
+            if (email && password) signInUser(email, password);
+        });
+    }
 
+    if (buttons.signupBtn) {
+        buttons.signupBtn.addEventListener('click', () => {
+            const email = inputs.email.value;
+            const password = inputs.password.value;
+            if (email && password) signUpUser(email, password);
+        });
+    }
+
+    if (buttons.logoutBtn) buttons.logoutBtn.addEventListener('click', signOutUser);
+    
+    if (buttons.goToLobbyBtn) {
+        buttons.goToLobbyBtn.addEventListener('click', () => {
+            showScreen('lobbyList');
+            populateRoomList();
+        });
+    }
+
+    if (buttons.createRoomBtn) {
+        buttons.createRoomBtn.addEventListener('click', () => {
+            const roomName = prompt("Digite o nome da sua sala:", `Sala de ${auth.currentUser.email.split('@')[0]}`);
+            if (roomName && roomName.trim() !== '') {
+                createRoom(roomName.trim());
+            }
+        });
+    }
+    
+    if (buttons.refreshRoomsBtn) buttons.refreshRoomsBtn.addEventListener('click', populateRoomList);
+    if (buttons.leaveRoomBtn) buttons.leaveRoomBtn.addEventListener('click', leaveRoom);
+    if (buttons.lobbyBackToMenuBtn) buttons.lobbyBackToMenuBtn.addEventListener('click', () => showScreen('mainMenu'));
+    
+    if (buttons.goToDeckbuilder) {
+        buttons.goToDeckbuilder.addEventListener('click', async () => {
+            showScreen('deckBuilder');
+            await DeckBuilder.init();
+        });
+    }
+    
+    if (buttons.backToMenu) buttons.backToMenu.addEventListener('click', () => showScreen('mainMenu'));
+});

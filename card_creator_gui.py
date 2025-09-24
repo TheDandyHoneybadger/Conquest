@@ -43,9 +43,9 @@ ALVOS = [
     'highest_cost_card_in_hand', 'chosen_card_in_hand', 'defending_unit',
     'all_sleeping_units', 'self_graveyard'
 ]
-# ATUALIZADO: Adicionadas novas keywords da expansão
+# ATUALIZADO: Ímpeto foi alterado para Brutalidade
 KEYWORDS = {
-    'Ímpeto': [], 'Toque Mortal': [], 'Vínculo Vital': [],
+    'Brutalidade': [], 'Toque Mortal': [], 'Vínculo Vital': [],
     'Proteger': ['N'], 'Evasão': [], 'Ressurgir': [],
     'Guarda-Costas': [], 'Atropelar': []
 }

@@ -1,7 +1,7 @@
 // js/game/game.js
 
 import { auth } from '../firebase/firebase-config.js';
-import { sendGameAction, updateGameState, updateScoreAndStartNewGame } from '../firebase/online.js';
+import { sendGameAction, updateGameState, updateScoreAndStartNewGame, listenToGameActions } from '../firebase/online.js';
 import { PHASES, STATES } from './game-constants.js';
 import { setupUI, renderizarTudo, showDiceRollResult, hideDiceRoll, updateScoreDisplay } from './game-renderer.js';
 import { executarLogicaDeFase, proximoTurnoSetup, setupPlayers, adicionarNaPilha, resolverPilha } from './game-logic.js';
@@ -13,8 +13,8 @@ let showScreenCallback = null;
 export const Game = {
     jogadores: [],
     pilhaDeEfeitos: [],
-    jogadorAtual: 0,
-    controleAtivo: 0,
+    jogadorAtual: 0, // Este será o ÍNDICE (0 ou 1) do jogador atual na array `jogadores`
+    controleAtivo: 0, // Este é o ÍNDICE (0 ou 1) do jogador local (o dono deste cliente)
     jogadorComPrioridade: 0,
     estado: 'LIVRE',
     turno: 1,
@@ -54,7 +54,8 @@ export const Game = {
         
         this.jogadores = setupPlayers(matchData.players, matchData.playerOrder);
         
-        setupUI();
+        // A UI agora é configurada aqui, depois de os jogadores serem criados
+        setupUI(); 
         
         if(matchData.gameState) {
             this.syncGameState(matchData.gameState, matchData.scores);
@@ -129,7 +130,8 @@ export const Game = {
             showScreenCallback('game');
         }
         this.initOnline(roomData);
-        // A responsabilidade de iniciar o listener foi movida para online.js
+        // O listener de ações agora é iniciado DEPOIS da inicialização
+        listenToGameActions(roomData.id); 
     },
 
     endMatch(winnerUid) {
@@ -237,6 +239,7 @@ export const Game = {
         this.adicionarNaPilha({ tipo: 'jogarCarta', carta: carta, zonaId: `${playerIndex === this.controleAtivo ? 'jogador' : 'oponente'}-${payload.targetSlot}`, dono: jogador });
         this.consecutivePasses = 0;
 
+        // Atualiza o estado do jogo apenas se for o remetente original da ação
         if (auth.currentUser.uid === senderUid) {
             const newGameState = this.getCurrentGameState();
             updateGameState(newGameState);
@@ -325,5 +328,14 @@ export const Game = {
     admitirDerrota() {
         if (!this.isGameRunning || !this.onlineState.opponentPlayerUid) return;
         updateScoreAndStartNewGame(this.onlineState.opponentPlayerUid);
+    },
+
+    // Função para o chat
+    enviarMensagemChat(mensagem) {
+        console.log("Enviando mensagem de chat:", mensagem);
+        // A lógica para enviar a mensagem para o Firebase viria aqui.
+        // Exemplo: sendGameAction({ type: 'CHAT_MESSAGE', payload: { message: mensagem } });
+        // Por enquanto, podemos simular a mensagem localmente para teste.
+        this.log(auth.currentUser.email.split('@')[0], mensagem);
     },
 };

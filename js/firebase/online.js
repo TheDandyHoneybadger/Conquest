@@ -2,7 +2,7 @@
 
 import { auth, db } from './firebase-config.js';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
-import { doc, getDoc, setDoc, getDocs, addDoc, collection, serverTimestamp, query, where, onSnapshot, updateDoc, deleteDoc, orderBy, limit } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
+import { doc, getDoc, setDoc, getDocs, addDoc, collection, serverTimestamp, query, where, onSnapshot, updateDoc, deleteDoc, orderBy } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
 import { Game } from '../game/game.js';
 
 let showScreenFunc;
@@ -12,12 +12,11 @@ let unsubscribeFromRoom = null;
 let unsubscribeFromActions = null;
 let currentRoomId = null;
 
-// --- FUNÇÃO CORRIGIDA E EXPORTADA ---
 export function listenToGameActions(roomId) {
     if (unsubscribeFromActions) unsubscribeFromActions();
     
     const actionsRef = collection(db, 'matches', roomId, 'game_actions');
-    const q = query(actionsRef, orderBy("timestamp", "desc"), limit(1));
+    const q = query(actionsRef, orderBy("timestamp"));
 
     unsubscribeFromActions = onSnapshot(q, (snapshot) => {
         snapshot.docChanges().forEach((change) => {
@@ -134,8 +133,7 @@ export async function joinRoom(roomId) {
         await updateDoc(roomRef, {
             [`players.${user.uid}`]: { uid: user.uid, displayName: user.email.split('@')[0], deck: deckData },
             playerOrder: [...roomSnap.data().playerOrder, user.uid],
-            status: 'rolling_dice',
-            [`scores.${user.uid}`]: 0
+            status: 'full' // NOVO ESTADO: Sala cheia, pronta para embaralhar e rolar os dados
         });
         
         listenToRoomUpdates(roomId);
@@ -264,7 +262,6 @@ export async function sendGameAction(action) {
     await addDoc(actionsRef, actionData);
 }
 
-// --- FUNÇÃO CORRIGIDA ---
 function listenToRoomUpdates(roomId) {
     if (unsubscribeFromRoom) unsubscribeFromRoom();
     currentRoomId = roomId;
@@ -279,20 +276,49 @@ function listenToRoomUpdates(roomId) {
 
         const roomData = { id: docSnapshot.id, ...docSnapshot.data() };
         const user = auth.currentUser;
+        const [p1_uid, p2_uid] = roomData.playerOrder;
 
         switch(roomData.status) {
             case 'waiting':
                 if (updateRoomAndWaitScreenFunc) updateRoomAndWaitScreenFunc(roomData);
                 break;
             
+            case 'full':
+                // Apenas o Host (p1) executa esta lógica para evitar conflitos
+                if (user.uid === p1_uid) {
+                    const p1_deckList = roomData.players[p1_uid].deck.cards;
+                    const p2_deckList = roomData.players[p2_uid].deck.cards;
+
+                    const shuffleArray = (array) => {
+                        let currentIndex = array.length, randomIndex;
+                        while (currentIndex > 0) {
+                            randomIndex = Math.floor(Math.random() * currentIndex);
+                            currentIndex--;
+                            [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+                        }
+                        return array;
+                    };
+
+                    const p1_shuffled = shuffleArray([...p1_deckList]);
+                    const p2_shuffled = shuffleArray([...p2_deckList]);
+
+                    await updateDoc(roomRef, {
+                        [`players.${p1_uid}.deck.cards`]: p1_shuffled,
+                        [`players.${p2_uid}.deck.cards`]: p2_shuffled,
+                        status: 'rolling_dice' // Muda para o próximo estado
+                    });
+                }
+                break;
+
             case 'rolling_dice':
                 Game.handleDiceRoll(roomData);
                 
+                // Ambos os jogadores rolam os seus dados
                 if (roomData.playerOrder.includes(user.uid) && !roomData.diceRolls.hasOwnProperty(user.uid)) {
                     await rollDice(roomId);
                 }
 
-                const [p1_uid, p2_uid] = roomData.playerOrder;
+                // Apenas o Host (p1) determina o vencedor e inicia o jogo
                 if (user.uid === p1_uid && roomData.diceRolls[p1_uid] && roomData.diceRolls[p2_uid] && !roomData.startingPlayerUid) {
                     
                     const startingPlayer = determineFirstPlayer(roomData);
@@ -319,8 +345,7 @@ function listenToRoomUpdates(roomId) {
 
             case 'ongoing':
                 if (!Game.isGameRunning) {
-                    Game.startMatch(roomData);
-                    listenToGameActions(roomId); // Inicia o listener aqui
+                    Game.startMatch(roomData); // Inicia o jogo para ambos os jogadores
                 } else if (roomData.gameState) {
                     Game.syncGameState(roomData.gameState, roomData.scores);
                 }

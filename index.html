@@ -134,15 +134,15 @@
             
             <div class="tabuleiro oponente">
                 <div class="lado-jogador oponente">
-                    <!-- Linha superior do oponente: CEMITÉRIO - S1 - G - S2 - DECK -->
-                    <div id="oponente-cemiterio" class="zona"></div>
+                    <div id="oponente-cemiterio" class="zona cemiterio"></div>
                     <div id="oponente-s1" class="zona"></div>
                     <div id="oponente-g" class="zona general"></div>
                     <div id="oponente-s2" class="zona"></div>
                     <div id="oponente-deck" class="zona"></div>
-                    
-                    <!-- Linha inferior do oponente: VAZIO - U1 - U2 - U3 - VAZIO -->
-                    <div id="oponente-vazio1" class="zona zona-vazia"></div>
+                    <div id="oponente-stats-display" class="general-stats-display">
+                        <div class="stat-item">❤️ <span class="stat-vida">30</span></div>
+                        <div class="stat-item">⭐ <span class="stat-xp">1</span></div>
+                    </div>
                     <div id="oponente-u1" class="zona"></div>
                     <div id="oponente-u2" class="zona"></div>
                     <div id="oponente-u3" class="zona"></div>
@@ -154,15 +154,15 @@
 
             <div class="tabuleiro jogador">
                 <div class="lado-jogador jogador">
-                    <!-- Linha superior do jogador: VAZIO - U1 - U2 - U3 - VAZIO -->
                     <div id="jogador-vazio1" class="zona zona-vazia"></div>
                     <div id="jogador-u1" class="zona"></div>
                     <div id="jogador-u2" class="zona"></div>
                     <div id="jogador-u3" class="zona"></div>
-                    <div id="jogador-vazio2" class="zona zona-vazia"></div>
-                    
-                    <!-- Linha inferior do jogador: CEMITÉRIO - S1 - G - S2 - DECK -->
-                    <div id="jogador-cemiterio" class="zona"></div>
+                    <div id="jogador-stats-display" class="general-stats-display">
+                        <div class="stat-item">❤️ <span class="stat-vida">30</span></div>
+                        <div class="stat-item">⭐ <span class="stat-xp">1</span></div>
+                    </div>
+                    <div id="jogador-cemiterio" class="zona cemiterio"></div>
                     <div id="jogador-s1" class="zona"></div>
                     <div id="jogador-g" class="zona general"></div>
                     <div id="jogador-s2" class="zona"></div>
@@ -177,30 +177,23 @@
             <div id="phase-track" class="phase-track"></div>
             <div class="menu-buttons">
                 <button id="passar-prioridade-btn" class="menu-button">Passar Prioridade</button>
-                <button id="admitir-derrota-btn" class="menu-button defeat-button">Admitir Derrota</button>
             </div>
             <div class="chat-container">
                 <h3>Chat</h3>
                 <div id="chat-messages" class="chat-messages"></div>
-                <input type="text" id="chat-input" placeholder="Digite sua mensagem...">
+                <div class="chat-input-area">
+                    <input type="text" id="chat-input" placeholder="Digite sua mensagem...">
+                    <button id="chat-send-btn">Enviar</button>
+                </div>
+                <button id="admitir-derrota-btn" class="menu-button defeat-button">Admitir Derrota</button>
             </div>
         </div>
 
         <div id="dice-roll-overlay" class="overlay hidden">
-            <div class="overlay-content">
-                <h2 id="dice-roll-title">A decidir quem começa...</h2>
-                <div class="dice-roll-container">
-                    <div class="dice-player">
-                        <span id="dice-player-name">Jogador 1</span>
-                        <div id="dice-player-result" class="dice-result">?</div>
-                    </div>
-                    <div class="dice-player">
-                        <span id="dice-opponent-name">Jogador 2</span>
-                        <div id="dice-opponent-result" class="dice-result">?</div>
-                    </div>
-                </div>
             </div>
-        </div>
+
+        <div id="cemetery-popup" class="overlay hidden">
+            </div>
     </div>
 
     <script type="module" src="js/ui/main.js"></script>
