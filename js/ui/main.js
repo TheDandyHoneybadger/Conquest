@@ -6,18 +6,9 @@ import { signUpUser, signInUser, signOutUser, getOpenRooms, createRoom, joinRoom
 import { DeckBuilder } from './deckbuilder.js';
 import { Game } from '../game/game.js';
 
-let isWaitingInRoom = false;
 const screens = {};
 
 function showScreen(screenName) {
-    if (screenName === 'roomWait') {
-        isWaitingInRoom = true;
-        window.addEventListener('beforeunload', leaveRoom);
-    } else {
-        isWaitingInRoom = false;
-        window.removeEventListener('beforeunload', leaveRoom);
-    }
-
     Object.values(screens).forEach(screen => {
         if (screen) screen.classList.add('hidden');
     });

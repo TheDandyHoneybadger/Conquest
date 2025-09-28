@@ -1,29 +1,22 @@
 // js/game/game.js
 
 import { auth } from '../firebase/firebase-config.js';
-import { sendGameAction, updateGameState, updateScoreAndStartNewGame, listenToGameActions } from '../firebase/online.js';
-import { PHASES, STATES } from './game-constants.js';
-import { setupUI, renderizarTudo, showDiceRollResult, hideDiceRoll, updateScoreDisplay } from './game-renderer.js';
-import { executarLogicaDeFase, proximoTurnoSetup, setupPlayers, adicionarNaPilha, resolverPilha } from './game-logic.js';
-import { databaseCartas } from '../../data/database.js';
-import { Carta } from './game-engine.js';
+import { sendGameAction, updateGameState, listenToGameActions, updateScoreAndStartNewGame } from '../firebase/online.js';
+import { PHASES } from './game-constants.js';
+import { setupUI, renderizarTudo, animateCardMove, updateScoreDisplay } from './game-renderer.js';
+import { setupPlayers, executarLogicaDeFase } from './game-logic.js';
 
 let showScreenCallback = null;
 
 export const Game = {
     jogadores: [],
-    pilhaDeEfeitos: [],
-    jogadorAtual: 0, // Este será o ÍNDICE (0 ou 1) do jogador atual na array `jogadores`
-    controleAtivo: 0, // Este é o ÍNDICE (0 ou 1) do jogador local (o dono deste cliente)
-    jogadorComPrioridade: 0,
-    estado: 'LIVRE',
+    jogadorAtual: 0,
+    controleAtivo: 0,
     turno: 1,
     fase: 0,
-    consecutivePasses: 0,
-    dragState: { active: false, mode: null, el: null, data: null },
-    proximoUID: 0,
+    zonaDeConflito: [],
+    estado: 'LIVRE', // 'LIVRE' ou 'ATACANDO'
     atacanteSelecionado: null,
-    combateAtual: null,
     isGameRunning: false,
     onlineState: {
         matchId: null,
@@ -33,8 +26,6 @@ export const Game = {
     },
     
     renderizarTudo,
-    resolverPilha,
-    adicionarNaPilha,
     
     setScreenChanger(callback) {
         showScreenCallback = callback;
@@ -54,58 +45,76 @@ export const Game = {
         
         this.jogadores = setupPlayers(matchData.players, matchData.playerOrder);
         
-        // A UI agora é configurada aqui, depois de os jogadores serem criados
         setupUI(); 
         
         if(matchData.gameState) {
             this.syncGameState(matchData.gameState, matchData.scores);
+        } else {
+             this.renderizarTudo();
         }
     },
     
     syncGameState(gameState, scores) {
-        if (this.estado === STATES.GAME_OVER) return;
+        if (!this.isGameRunning) return;
 
         this.onlineState.scores = scores;
         updateScoreDisplay(scores, this.onlineState.localPlayerUid, this.jogadores);
 
         const newPlayerIndex = this.jogadores.findIndex(p => p.uid === gameState.currentPlayerUid);
 
-        if (this.jogadorAtual !== newPlayerIndex) {
-            proximoTurnoSetup(this.jogadores[this.jogadorAtual]);
+        if (this.jogadorAtual !== newPlayerIndex || this.turno !== gameState.turn) {
             this.jogadorAtual = newPlayerIndex;
-            this.log("Sistema", `Turno de ${this.jogadores[this.jogadorAtual].nome}.`);
+            this.turno = gameState.turn;
+            this.log("Sistema", `Começou o Turno ${this.turno} de ${this.jogadores[this.jogadorAtual].nome}.`);
+            
+            if (this.jogadores[this.jogadorAtual].uid === this.onlineState.localPlayerUid) {
+                executarLogicaDeFase(this.jogadores[this.jogadorAtual], 0, this.turno);
+            }
         }
         
-        this.turno = gameState.turn;
-        this.fase = gameState.phase;
-        this.jogadorComPrioridade = this.jogadores.findIndex(p => p.uid === gameState.priorityPlayerUid);
-        this.consecutivePasses = gameState.consecutivePasses || 0;
-
-        if (this.consecutivePasses >= 2 && this.pilhaDeEfeitos.length > 0) {
-            this.resolverPilha();
+        if (this.fase !== gameState.phase) {
+            this.fase = gameState.phase;
+            if (this.fase === 1 && this.jogadores[this.jogadorAtual].uid === this.onlineState.localPlayerUid) {
+                executarLogicaDeFase(this.jogadores[this.jogadorAtual], 1, this.turno);
+            }
         }
-
-        executarLogicaDeFase();
         this.renderizarTudo();
     },
 
     handleIncomingAction(action) {
-        console.log("Recebendo ação do oponente:", action);
+        if (!this.isGameRunning) return;
         const sender = this.jogadores.find(j => j.uid === action.senderUid);
         const senderName = sender ? sender.nome : 'Oponente';
+        
+        if (action.type === 'CHAT_MESSAGE') {
+             this.log(senderName, action.payload.message);
+             return;
+        }
+
+        if (action.type === 'MANUAL_ATTACK') {
+            this.log(senderName, `declarou um ataque de ${action.payload.attackerName} a ${action.payload.defenderName}.`);
+            return;
+        }
+
+        const targetCard = this.findCardByUid(action.payload.cardUID);
+        if (!targetCard) return;
 
         switch(action.type) {
-            case 'PLAY_CARD':
-                this.log(senderName, `jogou ${action.payload.cardName}.`);
-                this.executarJogarCarta(action.payload, action.senderUid);
+            case 'MANUAL_FLIP_CARD':
+                targetCard.faceDown = !targetCard.faceDown;
+                this.log(senderName, `Virou ${action.payload.cardName} para ${targetCard.faceDown ? 'baixo' : 'cima'}.`);
+                this.renderizarTudo();
                 break;
-            case 'DECLARE_ATTACK':
-                this.executarDeclararAtaque(action.payload, action.senderUid);
+            case 'MANUAL_CHANGE_STATS':
+                targetCard.ataqueAtual = action.payload.atk;
+                targetCard.vidaAtual = action.payload.vida;
+                this.log(senderName, `Alterou os status de ${action.payload.cardName} para ${targetCard.ataqueAtual}/${targetCard.vidaAtual}.`);
+                this.renderizarTudo();
                 break;
-            case 'PASS_PRIORITY':
-                this.log(senderName, `passou a prioridade.`);
-                this.executarPassarPrioridade(action.senderUid);
-                break;
+            case 'MANUAL_MOVE_CARD':
+                 this.executarMoverCarta(targetCard, action.payload);
+                 this.log(senderName, `Moveu ${action.payload.cardName} para ${action.payload.destination}.`);
+                 break;
         }
     },
     
@@ -114,215 +123,121 @@ export const Game = {
             turn: this.turno,
             phase: this.fase,
             currentPlayerUid: this.jogadores[this.jogadorAtual].uid,
-            priorityPlayerUid: this.jogadores[this.jogadorComPrioridade].uid,
-            consecutivePasses: this.consecutivePasses,
-            winner: null
         };
     },
-
-    handleDiceRoll(roomData) {
-        showDiceRollResult(roomData, this.onlineState.localPlayerUid);
-    },
-
+    
     startMatch(roomData) {
-        hideDiceRoll();
-        if (showScreenCallback) {
-            showScreenCallback('game');
-        }
+        if (showScreenCallback) showScreenCallback('game');
         this.initOnline(roomData);
-        // O listener de ações agora é iniciado DEPOIS da inicialização
         listenToGameActions(roomData.id); 
     },
 
     endMatch(winnerUid) {
-        this.estado = STATES.GAME_OVER;
+        this.isGameRunning = false;
         const winner = this.jogadores.find(j => j.uid === winnerUid);
         alert(`Fim da partida! O vencedor é ${winner.nome}!`);
+        // Idealmente, adicionar um botão para voltar ao lobby
+    },
+
+    passarTurno() {
+        if (this.jogadores[this.jogadorAtual].uid !== this.onlineState.localPlayerUid) return;
+
+        let newPlayerIndex = (this.jogadorAtual + 1) % 2;
+        let newTurn = this.turno;
+        if (newPlayerIndex === 0) newTurn++;
+
+        const newGameState = { turn: newTurn, phase: 0, currentPlayerUid: this.jogadores[newPlayerIndex].uid };
+        updateGameState(newGameState);
     },
     
-    resetGame() {
-        this.jogadores = [];
-        this.pilhaDeEfeitos = [];
-        this.jogadorAtual = 0;
-        this.estado = 'LIVRE';
-        this.turno = 1;
-        this.fase = 0;
-        this.consecutivePasses = 0;
-        this.proximoUID = 0;
-        this.atacanteSelecionado = null;
-        this.combateAtual = null;
-        this.isGameRunning = false;
+    mudarFaseManualmente(targetIndex) {
+        if (this.jogadores[this.jogadorAtual].uid !== this.onlineState.localPlayerUid) return;
+        const newGameState = this.getCurrentGameState();
+        newGameState.phase = targetIndex % PHASES.length;
+        updateGameState(newGameState);
+    },
+
+    enviarAcao(type, payload) {
+        sendGameAction({ type, payload });
+    },
+
+    executarMoverCarta(carta, payload) {
+        const jogador = this.jogadores.find(p => p.uid === carta.owner.uid);
+        if (!jogador) return;
+
+        const fromRect = document.querySelector(`[data-uid="${carta.uid}"]`)?.getBoundingClientRect();
         
-        const log = document.getElementById('game-log');
-        if (log) log.innerHTML = '';
-    },
-
-    log(autor, mensagem) {
-        const logEl = document.getElementById('game-log');
-        if(!logEl) return;
-        const p = document.createElement('p');
-        p.innerHTML = `<strong>${autor}:</strong> ${mensagem}`;
-        logEl.appendChild(p);
-        logEl.scrollTop = logEl.scrollHeight;
-    },
-
-    passarPrioridade() {
-        if(this.jogadores[this.jogadorComPrioridade].uid !== this.onlineState.localPlayerUid) {
-            this.log('Sistema', 'Não é a sua vez de passar a prioridade.');
-            return;
+        if (payload.fromZone === 'mao') {
+            const index = jogador.mao.findIndex(c => c.uid === carta.uid);
+            if (index > -1) jogador.mao.splice(index, 1);
+        } else if (payload.fromZone === 'campo') {
+            jogador.campo[payload.fromSlot] = null;
+        } else if (payload.fromZone === 'conflito') {
+            const index = this.zonaDeConflito.findIndex(c => c.uid === carta.uid);
+            if (index > -1) this.zonaDeConflito.splice(index, 1);
         }
-        sendGameAction({ type: 'PASS_PRIORITY' });
-        this.executarPassarPrioridade(this.onlineState.localPlayerUid);
-    },
 
-    jogarCarta(carta, zonaId) {
-        const jogador = carta.owner;
-        if (jogador.uid !== this.onlineState.localPlayerUid) return;
-        if (this.jogadores[this.jogadorComPrioridade].uid !== this.onlineState.localPlayerUid) {
-             this.log('Sistema', 'Aguarde a sua vez de jogar.');
-             return;
+        if (payload.destination === 'campo') {
+            jogador.campo[payload.destinationSlot] = carta;
+            carta.zona = 'campo';
+            carta.slot = payload.destinationSlot;
+        } else if (payload.destination === 'mao') {
+            jogador.mao.push(carta);
+            carta.zona = 'mao';
+        } else if (payload.destination === 'cemiterio') {
+            jogador.cemiterio.push(carta);
+            carta.zona = 'cemiterio';
+        } else if (payload.destination === 'conflito') {
+            this.zonaDeConflito.push(carta);
+            carta.zona = 'conflito';
         }
-        if (jogador.experiencia < carta.custo) {
-            this.log('Sistema', 'Experiência insuficiente.');
-            return;
-        }
-        
-        const payload = {
-            cardUid: carta.uid,
-            cardId: carta.id,
-            cardName: carta.nome,
-            targetSlot: zonaId.substring(zonaId.indexOf('-') + 1)
-        };
-        sendGameAction({ type: 'PLAY_CARD', payload: payload });
-        this.executarJogarCarta(payload, this.onlineState.localPlayerUid);
-    },
 
-    declararAtaque(atacante, defensor) {
-        const payload = {
-            attackerUid: atacante.carta.uid,
-            defenderUid: defensor.carta.uid
-        };
-        sendGameAction({ type: 'DECLARE_ATTACK', payload: payload });
-        this.executarDeclararAtaque(payload);
-    },
-
-    executarPassarPrioridade(senderUid) {
-        this.consecutivePasses++;
-        this.jogadorComPrioridade = (this.jogadorComPrioridade + 1) % 2;
-
-        if (auth.currentUser.uid === senderUid) {
-             const newGameState = this.getCurrentGameState();
-             updateGameState(newGameState);
-        }
-        
-        if (this.consecutivePasses >= 2 && this.pilhaDeEfeitos.length > 0) {
-            this.resolverPilha();
+        if (fromRect) {
+            animateCardMove(fromRect, carta);
         } else {
             this.renderizarTudo();
         }
     },
-
-    executarJogarCarta(payload, senderUid) {
-        const playerIndex = this.jogadores.findIndex(p => p.uid === senderUid);
-        if (playerIndex === -1) return;
-
-        const jogador = this.jogadores[playerIndex];
-        const cardIndex = jogador.mao.findIndex(c => c.uid === payload.cardUid);
-
-        if (cardIndex === -1) {
-            console.warn(`Carta ${payload.cardUid} não encontrada na mão de ${senderUid}. Ação ignorada.`);
-            return;
-        }
-
-        const carta = jogador.mao.splice(cardIndex, 1)[0];
-        jogador.experiencia -= carta.custo;
-        this.adicionarNaPilha({ tipo: 'jogarCarta', carta: carta, zonaId: `${playerIndex === this.controleAtivo ? 'jogador' : 'oponente'}-${payload.targetSlot}`, dono: jogador });
-        this.consecutivePasses = 0;
-
-        // Atualiza o estado do jogo apenas se for o remetente original da ação
-        if (auth.currentUser.uid === senderUid) {
-            const newGameState = this.getCurrentGameState();
-            updateGameState(newGameState);
-        }
-        
+    
+    iniciarAtaqueComCarta(carta) {
+        this.estado = 'ATACANDO';
+        this.atacanteSelecionado = carta;
+        this.log('Sistema', `Você selecionou ${carta.nome} para atacar. Selecione um alvo.`);
         this.renderizarTudo();
+    },
+
+    selecionarAlvo(alvo) {
+        if (this.estado !== 'ATACANDO' || !this.atacanteSelecionado) return;
+        
+        this.enviarAcao('MANUAL_ATTACK', {
+            attackerName: this.atacanteSelecionado.nome,
+            defenderName: alvo.nome,
+        });
+        
+        this.log('Você', `declarou um ataque de ${this.atacanteSelecionado.nome} a ${alvo.nome}.`);
+
+        this.atacanteSelecionado = null;
+        this.estado = 'LIVRE';
+        this.renderizarTudo();
+    },
+
+    cancelarAtaque() {
+        if (this.estado === 'ATACANDO') {
+            this.estado = 'LIVRE';
+            this.atacanteSelecionado = null;
+            this.log('Sistema', 'Ataque cancelado.');
+            this.renderizarTudo();
+        }
     },
     
-    executarDeclararAtaque(payload) {
-        const atacanteInfo = this.findCardOnBoardByUid(payload.attackerUid);
-        const defensorInfo = this.findCardOnBoardByUid(payload.defenderUid);
-
-        if (!atacanteInfo || !defensorInfo) return;
-        
-        atacanteInfo.carta.podeAtacar = false; 
-
-        this.estado = STATES.WAITING_FOR_BLOCK;
-        this.combateAtual = { atacante: atacanteInfo, defensor: defensorInfo, bloqueador: null };
-        this.atacanteSelecionado = null;
-        
-        this.jogadorComPrioridade = (this.jogadorAtual + 1) % 2;
-        this.log('Sistema', `${atacanteInfo.carta.nome} ataca ${defensorInfo.carta.nome}.`);
-        this.renderizarTudo();
-    },
-
-    mudarFaseManualmente(targetIndex) {
-        if(this.jogadores[this.jogadorAtual].uid !== this.onlineState.localPlayerUid || this.estado !== STATES.FREE || this.pilhaDeEfeitos.length > 0) return;
-        if(targetIndex <= this.fase) return;
-        
-        let newPhase = this.fase;
-        let newTurn = this.turno;
-        let newPlayerIndex = this.jogadorAtual;
-
-        while (newPhase < targetIndex) {
-            newPhase++;
-        }
-
-        if (newPhase >= PHASES.length -1) {
-            newPhase = 0;
-            newPlayerIndex = (this.jogadorAtual + 1) % 2;
-            if (newPlayerIndex === 0) newTurn++;
-        }
-
-        const newGameState = {
-            turn: newTurn,
-            phase: newPhase,
-            currentPlayerUid: this.jogadores[newPlayerIndex].uid,
-            priorityPlayerUid: this.jogadores[newPlayerIndex].uid,
-            consecutivePasses: 0
-        };
-        updateGameState(newGameState);
-    },
-
-    findCardOnBoardByUid(uid) {
+    findCardByUid(uid) {
         for (const jogador of this.jogadores) {
-            if (jogador.general.uid === uid) {
-                return { carta: jogador.general, slot: 'g', dono: jogador };
-            }
-            for (const slot in jogador.campo) {
-                const carta = jogador.campo[slot];
-                if (carta && carta.uid === uid) {
-                    return { carta: carta, slot: slot, dono: jogador };
-                }
-            }
+            const card = jogador.findCardByUid(uid);
+            if (card) return card;
         }
+        const cardInConflict = this.zonaDeConflito.find(c => c.uid === uid);
+        if (cardInConflict) return cardInConflict;
         return null;
-    },
-
-    resolverCombateFinal() {
-        const { atacante, defensor, bloqueador } = this.combateAtual;
-        const alvoFinal = bloqueador || defensor;
-        
-        this.adicionarNaPilha({
-            tipo: 'combate',
-            carta: atacante.carta,
-            dono: atacante.dono,
-            contexto: { atacante, defensor: alvoFinal }
-        });
-
-        this.combateAtual = null;
-        this.estado = STATES.WAITING_FOR_RESPONSE;
-        this.jogadorComPrioridade = this.jogadorAtual;
-        this.resolverPilha();
     },
 
     admitirDerrota() {
@@ -330,12 +245,21 @@ export const Game = {
         updateScoreAndStartNewGame(this.onlineState.opponentPlayerUid);
     },
 
-    // Função para o chat
     enviarMensagemChat(mensagem) {
-        console.log("Enviando mensagem de chat:", mensagem);
-        // A lógica para enviar a mensagem para o Firebase viria aqui.
-        // Exemplo: sendGameAction({ type: 'CHAT_MESSAGE', payload: { message: mensagem } });
-        // Por enquanto, podemos simular a mensagem localmente para teste.
-        this.log(auth.currentUser.email.split('@')[0], mensagem);
+        this.enviarAcao('CHAT_MESSAGE', { message: mensagem });
     },
+
+    resetGame() {
+        this.jogadores = [];
+        this.jogadorAtual = 0;
+        this.turno = 1;
+        this.fase = 0;
+        this.zonaDeConflito = [];
+        this.estado = 'LIVRE';
+        this.atacanteSelecionado = null;
+        this.isGameRunning = false;
+        const log = document.getElementById('game-log');
+        if (log) log.innerHTML = '';
+    }
 };
+

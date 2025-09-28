@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="css/card.css">
     <link rel="stylesheet" href="css/deckbuilder.css">
     <link rel="stylesheet" href="css/game.css">
+    <link rel="stylesheet" href="css/context-menu.css">
 </head>
 <body>
 
@@ -176,7 +177,8 @@
         <div class="game-ui-panel right-panel">
             <div id="phase-track" class="phase-track"></div>
             <div class="menu-buttons">
-                <button id="passar-prioridade-btn" class="menu-button">Passar Prioridade</button>
+                <button id="attack-btn" class="menu-button attack-button hidden">Declarar Ataque</button>
+                <button id="passar-turno-btn" class="menu-button turn-button">Passar Turno</button>
             </div>
             <div class="chat-container">
                 <h3>Chat</h3>
@@ -190,12 +192,30 @@
         </div>
 
         <div id="dice-roll-overlay" class="overlay hidden">
+            <div class="dice-roll-content">
+                <h2 id="dice-roll-title">A decidir quem começa...</h2>
+                <div class="dice-roll-players">
+                    <div class="dice-player">
+                        <h3 id="dice-player-name">Jogador 1</h3>
+                        <div class="dice" id="dice-player-result">?</div>
+                    </div>
+                    <div class="dice-vs">vs</div>
+                    <div class="dice-player">
+                        <h3 id="dice-opponent-name">Jogador 2</h3>
+                        <div class="dice" id="dice-opponent-result">?</div>
+                    </div>
+                </div>
             </div>
+        </div>
 
         <div id="cemetery-popup" class="overlay hidden">
-            </div>
+             <!-- O conteúdo deste popup pode ser adicionado via JS -->
+        </div>
     </div>
+
+    <div id="context-menu" class="context-menu"></div>
 
     <script type="module" src="js/ui/main.js"></script>
 </body>
 </html>
+

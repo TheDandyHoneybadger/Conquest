@@ -91,7 +91,7 @@
     display: flex; 
     flex-direction: column; 
     gap: 10px; 
-    min-height: 0; /* Para flexbox funcionar corretamente */
+    min-height: 0;
 }
 
 #game-card-preview-display { 
@@ -117,7 +117,7 @@
     border-radius: 6px;
     font-size: 0.9em;
     line-height: 1.4;
-    height: 200px; /* ALTURA FIXA PARA A DESCRIÇÃO */
+    height: 200px; 
 }
 
 #game-card-preview-content h3 { 
@@ -142,7 +142,7 @@
     flex: 1 1 40%; 
     display: flex; 
     flex-direction: column; 
-    min-height: 0; /* Para flexbox funcionar corretamente */
+    min-height: 0; 
 }
 
 .game-log-container h3 {
@@ -197,14 +197,15 @@
 
 .mao .card-container { 
     width: clamp(80px, 7vw, 120px); 
-    transition: transform 0.3s ease, z-index 0.1s ease; 
-    margin: 0 -5px; 
+    transition: transform 0.2s ease, z-index 0s ease 0.1s, margin 0.2s ease; 
+    margin: 0 -15px; 
 }
 
+/* CORREÇÃO: Efeito de hover mais sutil e centralizado aqui */
 .mao .card-container:hover { 
-    transform: translateY(-25px) scale(1.15); 
+    transform: translateY(-20px) scale(1.1); 
     z-index: 100; 
-    margin: 0 5px; 
+    margin: 0 2px;
 }
 
 #mao-oponente .card-container {
@@ -212,8 +213,7 @@
 }
 
 #mao-oponente .card-container:hover { 
-    transform: translateY(25px) scale(1.15) rotate(180deg); 
-    z-index: 100; 
+    transform: translateY(20px) scale(1.1) rotate(180deg); 
 }
 
 /* ===== TABULEIRO DE JOGO ===== */
@@ -230,11 +230,11 @@
     grid-template-areas: 
         "vazio1 u1 u2 u3 stats"
         "cemiterio s1 g s2 deck";
-    grid-template-columns: 1fr 1fr 1fr 1fr 1fr; /* 5 colunas iguais */
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
     grid-template-rows: auto auto; 
     gap: 0.8vh; 
     width: 100%; 
-    max-width: 800px; /* Aumentado para acomodar a nova coluna */
+    max-width: 800px;
     padding: 0 1vw;
     align-items: center;
     justify-items: center;
@@ -247,8 +247,12 @@
 }
 
 .lado-jogador.oponente .card-container {
+    transform: none; 
+}
+.lado-jogador.oponente .card-container .carta {
     transform: rotate(180deg);
 }
+
 
 /* Posicionamento das zonas */
 #oponente-cemiterio, #jogador-cemiterio { grid-area: cemiterio; }
@@ -301,26 +305,13 @@
     background: rgba(0,0,0,0.3);
 }
 
-/* ESTILO DO CEMITÉRIO */
 .zona.cemiterio {
-    background-color: rgba(10, 0, 0, 0.4); /* Fundo mais escuro */
+    background-color: rgba(10, 0, 0, 0.4);
     cursor: pointer;
 }
 .zona.cemiterio:hover {
     border-color: var(--cor-destaque);
     box-shadow: 0 0 10px var(--cor-destaque);
-}
-
-.zona.valida { 
-    border-color: var(--cor-destaque); 
-    box-shadow: 0 0 15px var(--cor-destaque); 
-    background: rgba(255, 215, 0, 0.1);
-    animation: pulse-glow 1.5s ease-in-out infinite alternate;
-}
-
-@keyframes pulse-glow {
-    from { box-shadow: 0 0 10px var(--cor-destaque); }
-    to { box-shadow: 0 0 20px var(--cor-destaque), 0 0 30px var(--cor-destaque); }
 }
 
 .zona.general {
@@ -355,7 +346,7 @@
     text-align: center;
 }
 
-/* ===== ÁREA DE CONFLITO (PILHA) ===== */
+/* ===== ÁREA DE CONFLITO ===== */
 #area-de-conflito { 
     display: flex; 
     flex-wrap: wrap; 
@@ -372,10 +363,16 @@
 }
 
 #area-de-conflito:empty::after {
-    content: "Área de Conflito - Pilha de Efeitos";
+    content: "Zona de Conflito";
     color: var(--cor-borda-painel-transparente);
     font-style: italic;
     font-size: 0.9em;
+}
+
+#area-de-conflito .card-container {
+    aspect-ratio: 63 / 88;
+    max-width: 100px;
+    flex: 0 0 auto;
 }
 
 /* ===== TRACK DE FASES ===== */
@@ -387,12 +384,6 @@
     border-radius: 25px; 
     border: 2px solid var(--cor-borda-painel-transparente); 
     margin-bottom: 10px;
-}
-
-#area-de-conflito .card-container {
-    aspect-ratio: 63 / 88;
-    max-width: 100px;
-    flex: 0 0 auto;
 }
 
 .phase-orb { 
@@ -465,28 +456,37 @@
     font-family: 'Lora', serif;
 }
 
-.menu-button:hover {
+.menu-button:hover:not(:disabled) {
     background: linear-gradient(135deg, #6f6f6f 0%, #5a5a5a 100%);
     border-color: var(--cor-destaque);
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-#passar-prioridade-btn.hidden { 
-    display: none; 
+.menu-button:disabled {
+    cursor: not-allowed;
+    background: #2a2a2a;
+    color: #666;
+    border-color: #444;
 }
 
-/* BOTÃO DE DESISTIR */
+.menu-button.turn-button {
+    background: linear-gradient(135deg, #00561b 0%, #004214 100%);
+    border-color: #007a27;
+}
+.menu-button.turn-button:hover:not(:disabled) {
+    background: linear-gradient(135deg, #007a27 0%, #00561b 100%);
+}
+
 .menu-button.defeat-button {
     background: linear-gradient(135deg, #8b0000 0%, #660000 100%);
     border-color: #aa0000;
-    margin-top: auto; /* Empurra para o fundo do container flex */
+    margin-top: auto;
 }
 
 .menu-button.defeat-button:hover {
     background: linear-gradient(135deg, #aa0000 0%, #880000 100%);
 }
-
 
 /* ===== CHAT ===== */
 .chat-container { 
@@ -519,7 +519,7 @@
 .chat-input-area {
     display: flex;
     margin-top: 10px;
-    margin-bottom: 10px; /* Espaço para o botão de desistir */
+    margin-bottom: 10px;
     gap: 5px;
 }
 #chat-input { 
@@ -549,65 +549,6 @@
     background: var(--cor-destaque);
 }
 
-/* ===== ESTADOS DE COMBATE ===== */
-.atacante-valido { 
-    cursor: crosshair; 
-    box-shadow: 0 0 20px 5px var(--glow-color-jogador) !important; 
-    border-color: var(--glow-color-jogador) !important;
-}
-
-.atacante-selecionado { 
-    box-shadow: 0 0 20px 5px gold !important; 
-    border-color: gold !important;
-    animation: selected-pulse 1s ease-in-out infinite alternate;
-}
-
-@keyframes selected-pulse {
-    from { transform: scale(1); }
-    to { transform: scale(1.02); }
-}
-
-.alvo-valido { 
-    cursor: pointer; 
-    box-shadow: 0 0 20px 5px var(--glow-color-oponente) !important; 
-    border-color: var(--glow-color-oponente) !important;
-}
-
-.bloqueador-valido { 
-    cursor: pointer; 
-    box-shadow: 0 0 20px 5px lightblue !important; 
-    border-color: lightblue !important;
-}
-
-/* ===== PROMPT DE BLOQUEIO ===== */
-#prompt-bloqueio { 
-    position: fixed; 
-    top: 50%; 
-    left: 50%; 
-    transform: translate(-50%, -50%); 
-    background: var(--cor-painel); 
-    border: 3px solid var(--cor-destaque); 
-    padding: 30px; 
-    border-radius: 15px; 
-    z-index: 1002; 
-    text-align: center;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(5px);
-}
-/* ... */
-
-
-/* ===== SETA DE ATAQUE ===== */
-#seta-ataque { 
-    position: absolute; 
-    top: 0; 
-    left: 0; 
-    width: 100%; 
-    height: 100%; 
-    pointer-events: none; 
-    z-index: 99; 
-}
-
 /* ===== OVERLAYS E POPUPS ===== */
 .overlay {
     position: fixed;
@@ -622,62 +563,6 @@
     z-index: 1000;
 }
 .overlay.hidden { display: none; }
-
-.overlay-content {
-    background: var(--cor-painel);
-    border: 3px solid var(--cor-borda-painel);
-    border-radius: 15px;
-    padding: 40px;
-    text-align: center;
-    max-width: 500px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-}
-/* ... */
-
-/* POPUP DO CEMITÉRIO */
-.cemetery-popup-content {
-    background: var(--cor-painel);
-    border: 3px solid var(--cor-borda-painel);
-    border-radius: 15px;
-    padding: 20px;
-    width: 80%;
-    max-width: 1000px;
-    height: 80%;
-    display: flex;
-    flex-direction: column;
-}
-.cemetery-popup-content h2 {
-    color: var(--cor-destaque);
-    font-family: 'Lora', serif;
-    margin: 0 0 15px;
-    text-align: center;
-}
-.cemetery-grid {
-    overflow-y: auto;
-    flex-grow: 1;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 15px;
-    padding: 10px;
-    background: rgba(0,0,0,0.3);
-    border-radius: 8px;
-}
-.cemetery-grid .card-container {
-    width: 100%;
-}
-.cemetery-grid .carta {
-    font-size: 5px; 
-}
-#cemetery-popup-close-btn {
-    margin-top: 15px;
-    padding: 10px 20px;
-    align-self: center;
-    background: var(--cor-borda-painel);
-    border: none;
-    border-radius: 8px;
-    font-weight: bold;
-    cursor: pointer;
-}
 
 /* STATS DO GENERAL NO CAMPO */
 .general-stats-display {
@@ -703,3 +588,71 @@
 }
 .stat-item .stat-vida { color: lightgreen; }
 .stat-item .stat-xp { color: var(--cor-destaque); }
+
+/* Estilo para a carta que está a animar */
+.card-clone {
+    position: fixed; 
+    z-index: 2000; 
+    pointer-events: none; 
+    transition: all 0.5s cubic-bezier(0.65, 0, 0.35, 1); 
+}
+
+/* ESTADOS DE COMBATE VISUAIS */
+.atacante-valido .carta {
+    box-shadow: 0 0 15px 3px var(--glow-color-jogador) !important;
+}
+
+.atacante-selecionado .carta {
+    box-shadow: 0 0 15px 3px gold !important;
+}
+
+.alvo-valido .carta {
+    box-shadow: 0 0 15px 3px var(--glow-color-oponente) !important;
+}
+
+/* ROLAGEM DE DADOS */
+#dice-roll-overlay .overlay-content {
+    background: var(--cor-painel);
+    border: 3px solid var(--cor-borda-painel);
+    border-radius: 15px;
+    padding: 40px;
+    text-align: center;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+#dice-roll-title {
+    font-size: 1.8em;
+    color: var(--cor-destaque);
+    margin-bottom: 30px;
+    font-family: 'Lora', serif;
+}
+
+.dice-container {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.dice-player {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+.dice-player-name {
+    font-size: 1.2em;
+}
+
+.dice-result {
+    font-size: 3em;
+    font-weight: bold;
+    padding: 20px;
+    border: 2px solid var(--cor-borda-painel-transparente);
+    border-radius: 10px;
+    min-width: 80px;
+    background: rgba(0,0,0,0.3);
+}
+

@@ -1,95 +1,15 @@
 // js/game/game-actions.js
 
 import { Game } from './game.js';
-import { STATES } from './game-constants.js';
-
-export function selecionarAtacante(carta, slot) {
-    // NOVA VERIFICAÇÃO: Impede o primeiro jogador de atacar no primeiro turno.
-    const isFirstPlayerFirstTurn = Game.turno === 1 && Game.jogadorAtual === 0;
-    if (isFirstPlayerFirstTurn) {
-        Game.log('Sistema', 'O primeiro jogador não pode atacar no primeiro turno.');
-        return;
-    }
-
-    if (Game.estado !== STATES.FREE) return;
-    if (carta.isFrozen) {
-        Game.log('Sistema', `${carta.nome} está congelado e não pode atacar.`);
-        return;
-    }
-    Game.atacanteSelecionado = { carta, slot, dono: carta.owner };
-    Game.estado = STATES.DECLARING_ATTACK;
-    Game.log('Sistema', `Você selecionou ${carta.nome} para atacar. Escolha um alvo.`);
-    Game.renderizarTudo();
-}
-
-export function selecionarAlvo(alvoCarta, alvoSlot) {
-    if (Game.estado !== STATES.DECLARING_ATTACK) return;
-    const oponente = Game.jogadores.find(j => j.uid !== Game.onlineState.localPlayerUid);
-    const unidadesComGuardaCostas = Object.values(oponente.campo).filter(c => c && c.tipo === 'Unidade' && c.activeKeywords.has('Guarda-Costas'));
-    const todasUnidadesOponente = Object.values(oponente.campo).filter(c => c && c.tipo === 'Unidade');
-
-    if (unidadesComGuardaCostas.length > 0 && !alvoCarta.activeKeywords.has('Guarda-Costas')) {
-        Game.log('Sistema', 'Você deve atacar uma unidade com Guarda-Costas primeiro.');
-        return;
-    }
-
-    if (alvoCarta.tipo === 'General' && todasUnidadesOponente.length > 0) {
-        Game.log('Sistema', 'Você deve atacar as unidades inimigas primeiro.');
-        return;
-    }
-
-    const defensor = { carta: alvoCarta, slot: alvoSlot, dono: alvoCarta.owner };
-    Game.declararAtaque(Game.atacanteSelecionado, defensor);
-}
-
-export function responderBloqueio(resposta) {
-    if (Game.estado !== STATES.WAITING_FOR_BLOCK && Game.estado !== STATES.CHOOSING_BLOCKER) return;
-    
-    const oponente = Game.jogadores[Game.jogadorComPrioridade];
-    const unidadesDisponiveis = Object.values(oponente.campo).filter(c => c && c.tipo === 'Unidade');
-
-    if (resposta === true) {
-        if (unidadesDisponiveis.length === 0) {
-            Game.log('Sistema', 'Nenhuma unidade disponível para interceptar.');
-            responderBloqueio(false);
-            return;
-        }
-        if (oponente.experiencia < 1) {
-            Game.log('Sistema', 'XP insuficiente para interceptar.');
-            responderBloqueio(false);
-            return;
-        }
-        oponente.experiencia -= 1;
-        Game.estado = STATES.CHOOSING_BLOCKER;
-        Game.log('Sistema', 'Selecione uma de suas unidades para interceptar o ataque.');
-    } else {
-        Game.log('Sistema', 'Nenhuma interceptação declarada. O combate direto irá acontecer.');
-        Game.resolverCombateFinal();
-    }
-    Game.renderizarTudo();
-}
-
-export function selecionarBloqueador(bloqueadorCarta, bloqueadorSlot) {
-    if (Game.estado !== STATES.CHOOSING_BLOCKER) return;
-    Game.combateAtual.bloqueador = { carta: bloqueadorCarta, slot: bloqueadorSlot, dono: bloqueadorCarta.owner };
-    Game.log('Sistema', `${bloqueadorCarta.nome} intercepta o ataque, protegendo ${Game.combateAtual.defensor.carta.nome}.`);
-    Game.resolverCombateFinal();
-}
 
 export function iniciarArrasto(evento, carta, slotId, mode){
     evento.preventDefault();
     
-    const jogadorComPrioridade = Game.jogadores[Game.jogadorComPrioridade];
-    const temPrioridade = jogadorComPrioridade.uid === Game.onlineState.localPlayerUid;
-    
-    const podeArrastar = (
-        mode === 'play' && 
-        temPrioridade && 
-        (Game.fase === 2 || Game.fase === 4) && 
-        carta.custo <= jogadorComPrioridade.experiencia
-    );
-
-    if (!podeArrastar) return;
+    // Simplificado: qualquer carta que pertença ao jogador local pode ser arrastada
+    const localPlayer = Game.jogadores[Game.controleAtivo];
+    if (carta.owner.uid !== localPlayer.uid) {
+        return;
+    }
 
     Game.dragState = { active: true, mode: mode, el: evento.currentTarget, data: { cartaObj: carta, slotId: slotId } };
     
@@ -108,9 +28,6 @@ export function iniciarArrasto(evento, carta, slotId, mode){
 
 function moverElemento(evento) {
     if (!Game.dragState.active || !Game.dragState.clone) return;
-    Game.dragState.clone.style.position = 'fixed';
-    Game.dragState.clone.style.zIndex = '1001';
-    Game.dragState.clone.style.pointerEvents = 'none';
     Game.dragState.clone.style.left = `${evento.clientX - Game.dragState.clone.offsetWidth / 2}px`;
     Game.dragState.clone.style.top = `${evento.clientY - Game.dragState.clone.offsetHeight / 2}px`;
 }
@@ -166,3 +83,4 @@ export function admitirDerrota() {
         Game.admitirDerrota();
     }
 }
+

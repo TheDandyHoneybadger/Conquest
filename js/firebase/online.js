@@ -22,9 +22,9 @@ export function listenToGameActions(roomId) {
         snapshot.docChanges().forEach((change) => {
             if (change.type === "added") {
                 const action = change.doc.data();
-                if (action.senderUid !== auth.currentUser.uid) {
-                    Game.handleIncomingAction(action);
-                }
+                // Modelo Duelingbook: O servidor envia a ação para TODOS, incluindo o remetente.
+                // O cliente processa todas as ações que vêm do servidor.
+                Game.handleIncomingAction(action);
             }
         });
     }, (error) => {
@@ -96,10 +96,8 @@ export async function createRoom(roomName) {
         playerOrder: [user.uid],
         status: 'waiting',
         createdAt: serverTimestamp(),
-        diceRolls: {},
         scores: { [user.uid]: 0 },
         gameState: null,
-        startingPlayerUid: null,
     };
     
     try {
@@ -129,15 +127,33 @@ export async function joinRoom(roomId) {
             return;
         }
 
+        const hostUID = roomSnap.data().playerOrder[0];
+        const shuffleArray = (array) => {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        };
+
+        const hostDeck = roomSnap.data().players[hostUID].deck.cards;
+        
         currentRoomId = roomId;
+
         await updateDoc(roomRef, {
             [`players.${user.uid}`]: { uid: user.uid, displayName: user.email.split('@')[0], deck: deckData },
+            [`players.${hostUID}.deck.cards`]: shuffleArray([...hostDeck]),
+            [`players.${user.uid}.deck.cards`]: shuffleArray([...deckData.cards]),
             playerOrder: [...roomSnap.data().playerOrder, user.uid],
-            status: 'full' // NOVO ESTADO: Sala cheia, pronta para embaralhar e rolar os dados
+            status: 'ongoing', // Jogo começa diretamente
+            gameState: {
+                turn: 1,
+                phase: 0,
+                currentPlayerUid: hostUID
+            }
         });
         
         listenToRoomUpdates(roomId);
-        if (showScreenFunc) showScreenFunc('roomWait');
 
     } catch (error) {
         console.error("Erro ao entrar na sala:", error);
@@ -161,6 +177,8 @@ export async function leaveRoom() {
                         status: 'finished',
                         winner: opponentUid
                     });
+                } else {
+                    await deleteDoc(roomRef);
                 }
             }
         }
@@ -189,31 +207,7 @@ async function getPrincipalDeck(user) {
         return null;
     }
 
-    const deckData = deckSnap.data();
-    if (!deckData.general) {
-        alert(`O seu deck principal "${principalDeckName}" não tem um General. Por favor, edite o deck e selecione um.`);
-        return null;
-    }
-
-    return deckData;
-}
-
-async function rollDice(roomId) {
-    const roomRef = doc(db, 'matches', roomId);
-    const user = auth.currentUser;
-    const roll = Math.floor(Math.random() * 6) + 1;
-    await updateDoc(roomRef, { [`diceRolls.${user.uid}`]: roll });
-}
-
-function determineFirstPlayer(roomData) {
-    const [p1_uid, p2_uid] = roomData.playerOrder;
-    const p1_roll = roomData.diceRolls[p1_uid];
-    const p2_roll = roomData.diceRolls[p2_uid];
-
-    if (p1_roll === p2_roll) {
-        return roomData.playerOrder[Math.floor(Math.random() * 2)];
-    }
-    return p1_roll > p2_roll ? p1_uid : p2_uid;
+    return deckSnap.data();
 }
 
 export function updateGameState(newGameState) {
@@ -222,6 +216,7 @@ export function updateGameState(newGameState) {
     updateDoc(roomRef, { gameState: newGameState });
 }
 
+// CORREÇÃO: Adicionada a palavra-chave "export" para tornar a função pública
 export async function updateScoreAndStartNewGame(winnerUid) {
     if (!currentRoomId) return;
     const roomRef = doc(db, 'matches', currentRoomId);
@@ -242,15 +237,12 @@ export async function updateScoreAndStartNewGame(winnerUid) {
         const startingPlayerUid = roomData.playerOrder.find(uid => uid !== winnerUid);
         const newGameState = {
             turn: 1, phase: 0,
-            currentPlayerUid: startingPlayerUid,
-            priorityPlayerUid: startingPlayerUid,
-            winner: null,
-            consecutivePasses: 0
+            currentPlayerUid: startingPlayerUid
         };
+        // Reset dos decks e mãos seria necessário aqui numa implementação completa
         await updateDoc(roomRef, {
             scores: newScores,
-            gameState: newGameState,
-            startingPlayerUid: startingPlayerUid
+            gameState: newGameState
         });
     }
 }
@@ -275,87 +267,18 @@ function listenToRoomUpdates(roomId) {
         }
 
         const roomData = { id: docSnapshot.id, ...docSnapshot.data() };
-        const user = auth.currentUser;
-        const [p1_uid, p2_uid] = roomData.playerOrder;
-
-        switch(roomData.status) {
-            case 'waiting':
-                if (updateRoomAndWaitScreenFunc) updateRoomAndWaitScreenFunc(roomData);
-                break;
-            
-            case 'full':
-                // Apenas o Host (p1) executa esta lógica para evitar conflitos
-                if (user.uid === p1_uid) {
-                    const p1_deckList = roomData.players[p1_uid].deck.cards;
-                    const p2_deckList = roomData.players[p2_uid].deck.cards;
-
-                    const shuffleArray = (array) => {
-                        let currentIndex = array.length, randomIndex;
-                        while (currentIndex > 0) {
-                            randomIndex = Math.floor(Math.random() * currentIndex);
-                            currentIndex--;
-                            [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
-                        }
-                        return array;
-                    };
-
-                    const p1_shuffled = shuffleArray([...p1_deckList]);
-                    const p2_shuffled = shuffleArray([...p2_deckList]);
-
-                    await updateDoc(roomRef, {
-                        [`players.${p1_uid}.deck.cards`]: p1_shuffled,
-                        [`players.${p2_uid}.deck.cards`]: p2_shuffled,
-                        status: 'rolling_dice' // Muda para o próximo estado
-                    });
-                }
-                break;
-
-            case 'rolling_dice':
-                Game.handleDiceRoll(roomData);
-                
-                // Ambos os jogadores rolam os seus dados
-                if (roomData.playerOrder.includes(user.uid) && !roomData.diceRolls.hasOwnProperty(user.uid)) {
-                    await rollDice(roomId);
-                }
-
-                // Apenas o Host (p1) determina o vencedor e inicia o jogo
-                if (user.uid === p1_uid && roomData.diceRolls[p1_uid] && roomData.diceRolls[p2_uid] && !roomData.startingPlayerUid) {
-                    
-                    const startingPlayer = determineFirstPlayer(roomData);
-                    
-                    await updateDoc(roomRef, {
-                        startingPlayerUid: startingPlayer
-                    });
-
-                    setTimeout(() => {
-                        const newGameState = {
-                            turn: 1, phase: 0,
-                            currentPlayerUid: startingPlayer,
-                            priorityPlayerUid: startingPlayer,
-                            winner: null,
-                            consecutivePasses: 0
-                        };
-                        updateDoc(roomRef, {
-                            gameState: newGameState,
-                            status: 'ongoing'
-                        });
-                    }, 2500);
-                }
-                break;
-
-            case 'ongoing':
-                if (!Game.isGameRunning) {
-                    Game.startMatch(roomData); // Inicia o jogo para ambos os jogadores
-                } else if (roomData.gameState) {
-                    Game.syncGameState(roomData.gameState, roomData.scores);
-                }
-                break;
-            
-            case 'finished':
-                if (Game.isGameRunning) {
-                    Game.endMatch(roomData.winner);
-                }
-                break;
+        
+        if (roomData.status === 'ongoing') {
+            if (!Game.isGameRunning) {
+                Game.startMatch(roomData);
+            } else if (roomData.gameState) {
+                Game.syncGameState(roomData.gameState, roomData.scores);
+            }
+        } else if (roomData.status === 'finished' && Game.isGameRunning) {
+            Game.endMatch(roomData.winner);
+        } else if (updateRoomAndWaitScreenFunc) {
+            updateRoomAndWaitScreenFunc(roomData);
         }
     });
 }
+
