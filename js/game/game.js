@@ -27,6 +27,16 @@ export const Game = {
     
     renderizarTudo,
     
+    log(sender, message) {
+        const logContainer = document.getElementById('game-log');
+        if (logContainer) {
+            const messageElement = document.createElement('p');
+            messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;
+            logContainer.appendChild(messageElement);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+    },
+    
     setScreenChanger(callback) {
         showScreenCallback = callback;
     },
@@ -105,6 +115,42 @@ export const Game = {
                 this.log(senderName, `Virou ${action.payload.cardName} para ${targetCard.faceDown ? 'baixo' : 'cima'}.`);
                 this.renderizarTudo();
                 break;
+            case 'MANUAL_TRANSFORM_GENERAL':
+                if (targetCard.tipo === 'General' && targetCard.segundaFace) {
+                    if (!targetCard._primeiraFace) {
+                        targetCard._primeiraFace = {
+                            nome: targetCard.nome,
+                            ataque: targetCard.ataque,
+                            vida: targetCard.vida,
+                            descricao: targetCard.descricao,
+                            arte: targetCard.arte
+                        };
+                    }
+
+                    if (targetCard.transformed) {
+                        Object.assign(targetCard, targetCard._primeiraFace);
+                        targetCard.transformed = false;
+                        this.log(senderName, `reverteu ${targetCard._primeiraFace.nome}.`);
+                    } else {
+                        Object.assign(targetCard, targetCard.segundaFace);
+                        targetCard.transformed = true;
+                        this.log(senderName, `transformou o General em ${targetCard.nome}!`);
+                    }
+                    targetCard.vidaAtual = targetCard.vida; 
+                    targetCard.ataqueAtual = targetCard.ataque;
+                }
+                this.renderizarTudo();
+                break;
+            case 'MANUAL_ACTIVATE_ABILITY':
+                this.log(senderName, `ativou a habilidade de ${action.payload.cardName}.`);
+                const cardEl = document.querySelector(`[data-uid="${targetCard.uid}"]`);
+                if (cardEl) {
+                    cardEl.classList.add('ability-activated');
+                    setTimeout(() => {
+                        cardEl.classList.remove('ability-activated');
+                    }, 1000); // Duração da animação em ms
+                }
+                break;
             case 'MANUAL_CHANGE_STATS':
                 targetCard.ataqueAtual = action.payload.atk;
                 targetCard.vidaAtual = action.payload.vida;
@@ -136,7 +182,6 @@ export const Game = {
         this.isGameRunning = false;
         const winner = this.jogadores.find(j => j.uid === winnerUid);
         alert(`Fim da partida! O vencedor é ${winner.nome}!`);
-        // Idealmente, adicionar um botão para voltar ao lobby
     },
 
     passarTurno() {
@@ -262,4 +307,3 @@ export const Game = {
         if (log) log.innerHTML = '';
     }
 };
-

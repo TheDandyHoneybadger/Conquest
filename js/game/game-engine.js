@@ -1,7 +1,6 @@
 // js/game/game-engine.js
 
 import { Game } from './game.js';
-import { showPreview } from './game-renderer.js';
 
 // --- CLASSE DA CARTA (Versão Manual) ---
 export class Carta {
@@ -67,7 +66,7 @@ export class Carta {
 
         container.appendChild(cardEl);
         
-        container.addEventListener('mouseenter', () => showPreview(this));
+        // O evento 'mouseenter' para o preview agora é tratado no game-renderer.js
         
         return container;
     }
@@ -121,4 +120,3 @@ export class Jogador {
         return this.allCards.find(c => c.uid === uid);
     }
 }
-

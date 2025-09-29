@@ -26,6 +26,23 @@
     white-space: nowrap;
 }
 
+/* NOVO: Estilo para a linha de botões */
+.context-menu-row {
+    display: flex;
+    justify-content: space-around;
+    padding: 0 5px;
+}
+
+/* NOVO: Ajuste nos itens dentro da linha */
+.context-menu-row .context-menu-item {
+    flex-grow: 1;
+    text-align: center;
+    margin: 2px;
+    padding: 6px 8px; /* Padding menor para botões lado a lado */
+    border-radius: 3px;
+}
+
+
 .context-menu-item:hover {
     background-color: #a48042;
     color: #000;
@@ -52,4 +69,3 @@
     transform: translateX(10px);
     transition: opacity 0.15s ease-out, transform 0.15s ease-out;
 }
-

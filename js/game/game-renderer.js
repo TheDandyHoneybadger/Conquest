@@ -41,8 +41,14 @@ function renderizarLadoDoCampo(prefixo, jogador) {
                 if (carta.isAnimating) cartaEl.style.visibility = 'hidden';
                 
                 carta.zona = 'campo';
-                cartaEl.addEventListener('mouseenter', (e) => showContextMenu(e, carta, slot));
-                cartaEl.addEventListener('mouseleave', () => hideContextMenu());
+                cartaEl.addEventListener('mouseenter', (e) => {
+                    showPreview(carta);
+                    showContextMenu(e, carta, slot);
+                });
+                cartaEl.addEventListener('mouseleave', () => {
+                    showPreview(null);
+                    hideContextMenu();
+                });
                 adicionarListenersDeAtaque(cartaEl, carta);
 
                 zonaEl.appendChild(cartaEl);
@@ -60,8 +66,14 @@ export function renderizarMaos(localPlayer, opponentPlayer) {
         const el = carta.criarElementoHTML();
         if (carta.isAnimating) el.style.visibility = 'hidden';
         
-        el.addEventListener('mouseenter', (e) => showContextMenu(e, carta, null));
-        el.addEventListener('mouseleave', () => hideContextMenu());
+        el.addEventListener('mouseenter', (e) => {
+            showPreview(carta);
+            showContextMenu(e, carta, null);
+        });
+        el.addEventListener('mouseleave', () => {
+            showPreview(null);
+            hideContextMenu();
+        });
         maoJogadorEl.appendChild(el);
     });
 
@@ -133,8 +145,14 @@ function renderizarZonaDeConflito() {
         if (carta.isAnimating) {
             cartaEl.style.visibility = 'hidden';
         }
-        cartaEl.addEventListener('mouseenter', (e) => showContextMenu(e, carta, 'conflito'));
-        cartaEl.addEventListener('mouseleave', () => hideContextMenu());
+        cartaEl.addEventListener('mouseenter', (e) => {
+            showPreview(carta);
+            showContextMenu(e, carta, 'conflito');
+        });
+        cartaEl.addEventListener('mouseleave', () => {
+            showPreview(null);
+            hideContextMenu();
+        });
         adicionarListenersDeAtaque(cartaEl, carta);
         conflictZoneEl.appendChild(cartaEl);
     });
