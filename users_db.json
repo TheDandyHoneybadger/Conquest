@@ -1,0 +1,127 @@
+[
+  {
+    "display_name": "SamBr",
+    "permissions": {
+      "ygo": true,
+      "mtg": true,
+      "pkm": true,
+      "op": true,
+      "fab": true,
+      "dgm": true,
+      "can_import_db": true,
+      "can_manage_users": true,
+      "can_update_online_db": true,
+      "can_download_assets": true
+    },
+    "password_salt": "889e6afdd1c8a2a60790413c93ab15a9",
+    "password_hash": "6e82959fe30ea88eacfcfcfb2ca0b67264d861cc28c275c4ac899492e7054492",
+    "username_hash": "2337106cddb3befd9e909c47a415c9219f30f330edde1bd24fbebe9ebcac0278"
+  },
+  {
+    "display_name": "TiagoChain",
+    "permissions": {
+      "ygo": true,
+      "mtg": false,
+      "pkm": false,
+      "op": false,
+      "fab": false,
+      "dgm": false,
+      "can_import_db": false,
+      "can_manage_users": false,
+      "can_update_online_db": true
+    },
+    "password_salt": "ccd4ada36dd8c29e2e5658bf7e07ab6e",
+    "password_hash": "786b3edf5f5da1264a6ca1cec851355256096ccceb1f93dcc2fb8ea5b8d78a4b",
+    "username_hash": "bebc5ec3f01771d8f540b06c0634411220ae6a29c1d1cdcb98a4302a9f7e9fe9"
+  },
+  {
+    "display_name": "test",
+    "permissions": {
+      "ygo": true,
+      "mtg": true,
+      "pkm": true,
+      "op": true,
+      "fab": true,
+      "dgm": true,
+      "can_import_db": true,
+      "can_manage_users": true,
+      "can_update_online_db": true,
+      "can_download_assets": true
+    },
+    "password_salt": "77371fe335ccaf7cd5d659570da8b53b",
+    "password_hash": "bf983bb01f24ed9fbe1818f45337df99d11ce9752c67b58a80924b44987c5865",
+    "username_hash": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
+  },
+  {
+    "display_name": "yuri",
+    "permissions": {
+      "ygo": false,
+      "mtg": true,
+      "pkm": false,
+      "op": true,
+      "fab": false,
+      "dgm": false,
+      "can_import_db": false,
+      "can_manage_users": false,
+      "can_update_online_db": true,
+      "can_download_assets": true
+    },
+    "password_hash": "0aba17cdd08d6e3d4717c2682353836ed7cde8f4838bc5081cb13621172b252e",
+    "password_salt": "2af44e510226c4322af2a7f4747bddf1",
+    "username_hash": "c309191c26ca712c9eff38a140ba5326750581ae6cb4d6dd873fa8433d5cff7a"
+  },
+  {
+    "display_name": "Garcia",
+    "permissions": {
+      "ygo": true,
+      "mtg": true,
+      "pkm": true,
+      "op": true,
+      "fab": true,
+      "dgm": true,
+      "can_import_db": false,
+      "can_manage_users": false,
+      "can_update_online_db": true,
+      "can_download_assets": true
+    },
+    "password_salt": "efb01fd8a2ffea2d728e87bb546309e0",
+    "password_hash": "6a09b968337243a3f54b73d85b26754a0f93199a8349306d1e0921e67604a535",
+    "username_hash": "e9b71991b7f947a3467fff8aeb5f6944a34cb9c5f9ab9e605411dd3655190c6c"
+  },
+  {
+    "display_name": "LojaDaisuki",
+    "permissions": {
+      "ygo": true,
+      "mtg": false,
+      "pkm": false,
+      "op": false,
+      "fab": false,
+      "dgm": false,
+      "can_import_db": true,
+      "can_manage_users": false,
+      "can_update_online_db": true,
+      "can_download_assets": false
+    },
+    "password_salt": "96a75b87da9abbcaaf32de3277862c87",
+    "password_hash": "56fa1cd93b2ab19895cd66cf3068ba6a23438f616a03107d9b79d8ffb8c37c7f",
+    "username_hash": "baf96a2136479f4a5c60f031ef6f39493a6738b8b025b1f0bfe06e6c330fe953"
+  },
+  {
+    "display_name": "AndersonFenix",
+    "permissions": {
+      "ygo": true,
+      "mtg": true,
+      "pkm": true,
+      "op": true,
+      "fab": true,
+      "dgm": true,
+      "can_import_db": false,
+      "can_manage_users": false,
+      "can_update_online_db": true,
+      "can_download_assets": true
+    },
+    "password_salt": "6d00aa866bc313fd91c21afe21a3a059",
+    "password_hash": "42053dcc36567bb635a622ede63e93aa0bb28fa74d7e23bee637b49155ce1f92",
+    "username_hash": "8088df922029badc81ce45347bc9af3bc2e11833f4c6789109a1bbbad2b75ccd"
+  }
+]
