@@ -40,8 +40,8 @@
     background: rgba(0, 0, 0, 0.1);
     width: auto;
     height: auto;
-    gap: 5px;
-    padding: 10px 10px;
+    gap: 14px;
+    padding: 10px 300px;
     border-radius: 12px;
     margin: auto;
 }
@@ -99,18 +99,18 @@
 .game-log strong { color: var(--cor-destaque); }
 
 /* ===== MĆOS DOS JOGADORES ===== */
-.mao { display: flex; justify-content: center; align-items: center; position: relative; z-index: 50; padding: 0 20px; height: 119px; }
-#mao-oponente { transform: translateY(0px); }
-#mao-jogador { transform: translateY(0px); }
-.mao .card-container { width: 120px; transition: transform 0.2s ease, z-index 0s ease 0.1s, margin 0.2s ease; margin: 0 -25px; }
+.mao { display: flex; justify-content: center; align-items: center; position: relative; z-index: 50; padding: 0 20px; height: 100px; }
+#mao-oponente { transform: translateY(-85px); }
+#mao-jogador { transform: translateY(-68px); }
+.mao .card-container { width: 120px; transition: transform 0.2s ease, z-index 0s ease 0.1s, margin 0.2s ease; margin: 0 -12px; }
 .mao .card-container:hover { transform: translateY(-15px) scale(1.1); z-index: 100; margin: 0 5px; }
 #mao-oponente .card-container { transform: rotate(180deg); }
 #mao-oponente .card-container:hover { transform: translateY(15px) scale(1.1) rotate(180deg); }
 
 /* ===== TABULEIRO DE JOGO ===== */
 .tabuleiro { display: flex; align-items: center; justify-content: center; padding: 5px 0; position: relative; transition: transform 0.1s ease;}
-.tabuleiro.oponente { transform: translateY(0px); }
-.tabuleiro.jogador { transform: translateY(0px); }
+.tabuleiro.oponente { transform: translateY(-80px); }
+.tabuleiro.jogador { transform: translateY(-89px); }
 .lado-jogador { display: grid; grid-template-areas: "vazio1 u1 u2 u3 stats" "cemiterio s1 g s2 deck"; grid-template-columns: repeat(5, auto); gap: 5px; width: auto; max-width: 450px; padding: 0; align-items: center; justify-items: center; justify-content: center; }
 .lado-jogador.oponente { grid-template-areas: "deck s2 g s1 cemiterio" "stats u3 u2 u1 vazio1"; }
 .lado-jogador.oponente .card-container { transform: none; }
@@ -126,7 +126,7 @@
 #oponente-vazio1, #jogador-vazio1 { grid-area: vazio1; }
 #oponente-stats-display, #jogador-stats-display { grid-area: stats; }
 .zona-vazia { opacity: 0; pointer-events: none; border: none !important; background: transparent !important; }
-.zona { border: 2px solid var(--cor-borda-painel-transparente); border-radius: 6px; position: relative; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.2); transition: all 0.3s ease; width: 83px; height: 116px; }
+.zona { border: 2px solid var(--cor-borda-painel-transparente); border-radius: 6px; position: relative; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.2); transition: all 0.3s ease; width: 85px; height: 119px; }
 .zona .card-container { width: 100% !important; height: 100% !important; max-width: none !important; }
 .zona .carta { font-size: 3px !important; width: 100%; height: 100%; }
 .zona:hover { background: rgba(0,0,0,0.3); }
@@ -135,9 +135,9 @@
 .zona.general { border-width: 3px; border-style: double; box-shadow: 0 0 10px rgba(164, 128, 66, 0.5); }
 .arrastando { z-index: 1001; position: fixed; pointer-events: none; width: 60px; transform: rotate(5deg); filter: brightness(1.2); }
 .count-in-zone { position: absolute; bottom: 2px; right: 4px; background: rgba(0,0,0,0.8); color: white; padding: 2px 6px; border-radius: 12px; font-size: 0.8em; font-weight: bold; border: 1px solid var(--cor-borda-painel); min-width: 18px; text-align: center; }
-#area-de-conflito { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; align-items: center; min-height: 100px; padding: 10px; border-top: 2px solid var(--cor-borda-painel); border-bottom: 2px solid var(--cor-borda-painel); background: rgba(20, 20, 20, 0.6); border-radius: 8px; margin: 5px 0; position: relative; transition: transform 0.1s ease; transform: translateY(0px); }
+#area-de-conflito { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; align-items: center; min-height: 100px; padding: 10px; border-top: 2px solid var(--cor-borda-painel); border-bottom: 2px solid var(--cor-borda-painel); background: rgba(20, 20, 20, 0.6); border-radius: 8px; margin: 5px 0; position: relative; transition: transform 0.1s ease; transform: translateY(-76px); }
 #area-de-conflito:empty::after { content: "Zona de Conflito"; color: var(--cor-borda-painel-transparente); font-style: italic; font-size: 0.9em; }
-#area-de-conflito .card-container { width: 83px; flex: 0 0 auto; aspect-ratio: 63 / 88; }
+#area-de-conflito .card-container { width: 85px; flex: 0 0 auto; }
 #phase-track { display: flex; justify-content: space-around; background: var(--cor-painel-transparente); padding: 8px; border-radius: 25px; border: 2px solid var(--cor-borda-painel-transparente); margin-bottom: 10px; }
 .phase-orb { padding: 8px 6px; border-radius: 50%; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; background: rgba(60, 60, 60, 0.7); color: #e0e0e0; font-weight: bold; font-size: 0.8em; cursor: pointer; transition: all 0.3s ease; text-align: center; border: 2px solid transparent; }
 .phase-orb.clickable { border-color: rgba(255, 255, 255, 0.3); }
@@ -165,7 +165,7 @@
 #chat-send-btn:hover { background: var(--cor-destaque); }
 .overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.8); display: flex; align-items: center; justify-content: center; z-index: 1000; }
 .overlay.hidden { display: none; }
-.general-stats-display { display: flex; flex-direction: column; justify-content: center; gap: 4px; background-color: var(--cor-painel-transparente); padding: 8px; border-radius: 6px; border: 1px solid var(--cor-borda-painel-transparente); color: white; font-weight: bold; align-self: center; width: 83px; height: 116px; font-size: 1em; }
+.general-stats-display { display: flex; flex-direction: column; justify-content: center; gap: 4px; background-color: var(--cor-painel-transparente); padding: 8px; border-radius: 6px; border: 1px solid var(--cor-borda-painel-transparente); color: white; font-weight: bold; align-self: center; width: 85px; height: 119px; font-size: 1em; }
 .stat-item { display: flex; align-items: center; gap: 5px; }
 .stat-item .stat-vida { color: lightgreen; }
 .stat-item .stat-xp { color: var(--cor-destaque); }

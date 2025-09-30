@@ -36,6 +36,18 @@ export const Game = {
             logContainer.scrollTop = logContainer.scrollHeight;
         }
     },
+
+    // --- NOVO: Função específica para o log do chat ---
+    logChatMessage(sender, message) {
+        const chatContainer = document.getElementById('chat-messages');
+        if (chatContainer) {
+            const messageElement = document.createElement('p');
+            // Adapta a mensagem para o formato do chat, que não precisa do 'sender' em negrito
+            messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;
+            chatContainer.appendChild(messageElement);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+    },
     
     setScreenChanger(callback) {
         showScreenCallback = callback;
@@ -96,8 +108,9 @@ export const Game = {
         const sender = this.jogadores.find(j => j.uid === action.senderUid);
         const senderName = sender ? sender.nome : 'Oponente';
         
+        // --- ALTERADO: Direciona a mensagem de chat para a nova função ---
         if (action.type === 'CHAT_MESSAGE') {
-             this.log(senderName, action.payload.message);
+             this.logChatMessage(senderName, action.payload.message); // Usa a nova função
              return;
         }
 
@@ -305,5 +318,8 @@ export const Game = {
         this.isGameRunning = false;
         const log = document.getElementById('game-log');
         if (log) log.innerHTML = '';
+        // Limpa também o chat ao reiniciar o jogo
+        const chat = document.getElementById('chat-messages');
+        if (chat) chat.innerHTML = '';
     }
 };
