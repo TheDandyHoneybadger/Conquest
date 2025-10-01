@@ -123,5 +123,23 @@
     "password_salt": "6d00aa866bc313fd91c21afe21a3a059",
     "password_hash": "42053dcc36567bb635a622ede63e93aa0bb28fa74d7e23bee637b49155ce1f92",
     "username_hash": "8088df922029badc81ce45347bc9af3bc2e11833f4c6789109a1bbbad2b75ccd"
+  },
+  {
+    "display_name": "AdamoDominaria",
+    "permissions": {
+      "ygo": true,
+      "mtg": true,
+      "pkm": true,
+      "op": true,
+      "fab": true,
+      "dgm": true,
+      "can_import_db": false,
+      "can_manage_users": false,
+      "can_update_online_db": true,
+      "can_download_assets": true
+    },
+    "password_salt": "c5c109dd398b97d4114ffa262ccf81c0",
+    "password_hash": "306b3fbf140e25325aef52ccf821786ed634d452fc541428bb975744633168b4",
+    "username_hash": "433b222fce184ec5de5d231a511edd0746cd3f7f8f32ea768ef43a158295a435"
   }
 ]
