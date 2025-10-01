@@ -21,7 +21,6 @@
             <button id="signup-btn">Cadastrar</button>
         </div>
     </div>
-
     <div id="main-menu-screen" class="screen hidden">
         <div class="container">
             <h2 id="welcome-message">Bem-vindo!</h2>
@@ -30,19 +29,15 @@
             <button id="logout-btn">Sair</button>
         </div>
     </div>
-
     <div id="lobby-list-screen" class="screen hidden">
         <div class="container" style="width: 50%; max-width: 600px;">
             <h2>Salas Abertas</h2>
-            <div id="room-list-container">
-                <p>A carregar...</p>
-            </div>
+            <div id="room-list-container"><p>A carregar...</p></div>
             <button id="create-room-btn">Criar Sala</button>
             <button id="refresh-rooms-btn">Atualizar</button>
             <button id="lobby-back-to-menu-btn">Voltar ao Menu</button>
         </div>
     </div>
-
     <div id="room-wait-screen" class="screen hidden">
         <div class="container">
             <h2 id="room-wait-title">Aguardando...</h2>
@@ -51,7 +46,6 @@
             <button id="leave-room-btn">Sair da Sala</button>
         </div>
     </div>
-
     <div id="deck-builder-screen" class="screen hidden">
         <div class="deck-builder-container">
             <div class="deck-builder-ui">
@@ -124,50 +118,51 @@
             </div>
         </div>
 
-        <div id="field">
+        <div class="main-field-container">
             <div id="mao-oponente" class="mao"></div>
             
-            <div class="tabuleiro oponente">
-                <div class="lado-jogador oponente">
-                    <div id="oponente-cemiterio" class="zona cemiterio"></div>
-                    <div id="oponente-s1" class="zona"></div>
-                    <div id="oponente-g" class="zona general"></div>
-                    <div id="oponente-s2" class="zona"></div>
-                    <div id="oponente-deck" class="zona"></div>
-                    <div id="oponente-stats-display" class="general-stats-display">
-                        <div class="stat-item">❤️ <span class="stat-vida">30</span></div>
-                        <div class="stat-item">⭐ <span class="stat-xp">1</span></div>
+            <div id="field">
+                <div class="tabuleiro oponente">
+                    <div class="lado-jogador oponente">
+                        <div id="oponente-cemiterio" class="zona cemiterio"></div>
+                        <div id="oponente-s1" class="zona"></div>
+                        <div id="oponente-g" class="zona general"></div>
+                        <div id="oponente-s2" class="zona"></div>
+                        <div id="oponente-deck" class="zona"></div>
+                        <div id="oponente-stats-display" class="general-stats-display">
+                            <div class="stat-item">❤️ <span class="stat-vida">30</span></div>
+                            <div class="stat-item">⭐ <span class="stat-xp">1</span></div>
+                        </div>
+                        <div id="oponente-u1" class="zona"></div>
+                        <div id="oponente-u2" class="zona"></div>
+                        <div id="oponente-u3" class="zona"></div>
+                        <div id="oponente-vazio2" class="zona zona-vazia"></div>
                     </div>
-                    <div id="oponente-u1" class="zona"></div>
-                    <div id="oponente-u2" class="zona"></div>
-                    <div id="oponente-u3" class="zona"></div>
-                    <div id="oponente-vazio2" class="zona zona-vazia"></div>
                 </div>
-            </div>
 
-            <div id="area-de-conflito"></div>
+                <div id="area-de-conflito"></div>
 
-            <div class="tabuleiro jogador">
-                <div class="lado-jogador jogador">
-                    <div id="jogador-vazio1" class="zona zona-vazia"></div>
-                    <div id="jogador-u1" class="zona"></div>
-                    <div id="jogador-u2" class="zona"></div>
-                    <div id="jogador-u3" class="zona"></div>
-                    <div id="jogador-stats-display" class="general-stats-display">
-                        <div class="stat-item">❤️ <span class="stat-vida">30</span></div>
-                        <div class="stat-item">⭐ <span class="stat-xp">1</span></div>
+                <div class="tabuleiro jogador">
+                    <div class="lado-jogador jogador">
+                        <div id="jogador-vazio1" class="zona zona-vazia"></div>
+                        <div id="jogador-u1" class="zona"></div>
+                        <div id="jogador-u2" class="zona"></div>
+                        <div id="jogador-u3" class="zona"></div>
+                        <div id="jogador-stats-display" class="general-stats-display">
+                            <div class="stat-item">❤️ <span class="stat-vida">30</span></div>
+                            <div class="stat-item">⭐ <span class="stat-xp">1</span></div>
+                        </div>
+                        <div id="jogador-cemiterio" class="zona cemiterio"></div>
+                        <div id="jogador-s1" class="zona"></div>
+                        <div id="jogador-g" class="zona general"></div>
+                        <div id="jogador-s2" class="zona"></div>
+                        <div id="jogador-deck" class="zona"></div>
                     </div>
-                    <div id="jogador-cemiterio" class="zona cemiterio"></div>
-                    <div id="jogador-s1" class="zona"></div>
-                    <div id="jogador-g" class="zona general"></div>
-                    <div id="jogador-s2" class="zona"></div>
-                    <div id="jogador-deck" class="zona"></div>
                 </div>
             </div>
             
             <div id="mao-jogador" class="mao"></div>
         </div>
-
         <div class="game-ui-panel right-panel">
             <div id="phase-track" class="phase-track"></div>
             <div class="menu-buttons">
@@ -207,8 +202,7 @@
             </div>
         </div>
 
-        <div id="cemetery-popup" class="overlay hidden">
-             </div>
+        <div id="cemetery-popup" class="overlay hidden"></div>
     </div>
 
     <div id="context-menu" class="context-menu"></div>
