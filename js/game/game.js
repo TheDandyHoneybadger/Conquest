@@ -3,7 +3,7 @@
 import { auth } from '../firebase/firebase-config.js';
 import { sendGameAction, updateGameState, listenToGameActions, updateScoreAndStartNewGame } from '../firebase/online.js';
 import { PHASES } from './game-constants.js';
-import { setupUI, renderizarTudo, animateCardMove, updateScoreDisplay } from './game-renderer.js';
+import { setupUI, renderizarTudo, animateCardMove, updateScoreDisplay, logMessage } from './game-renderer.js';
 import { setupPlayers, executarLogicaDeFase } from './game-logic.js';
 
 let showScreenCallback = null;
@@ -27,22 +27,14 @@ export const Game = {
     
     renderizarTudo,
     
-    log(sender, message) {
-        const logContainer = document.getElementById('game-log');
-        if (logContainer) {
-            const messageElement = document.createElement('p');
-            messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;
-            logContainer.appendChild(messageElement);
-            logContainer.scrollTop = logContainer.scrollHeight;
-        }
+    log(sender, message, card = null) {
+        logMessage(sender, message, card);
     },
 
-    // --- NOVO: Função específica para o log do chat ---
     logChatMessage(sender, message) {
         const chatContainer = document.getElementById('chat-messages');
         if (chatContainer) {
             const messageElement = document.createElement('p');
-            // Adapta a mensagem para o formato do chat, que não precisa do 'sender' em negrito
             messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;
             chatContainer.appendChild(messageElement);
             chatContainer.scrollTop = chatContainer.scrollHeight;
@@ -108,25 +100,42 @@ export const Game = {
         const sender = this.jogadores.find(j => j.uid === action.senderUid);
         const senderName = sender ? sender.nome : 'Oponente';
         
-        // --- ALTERADO: Direciona a mensagem de chat para a nova função ---
         if (action.type === 'CHAT_MESSAGE') {
-             this.logChatMessage(senderName, action.payload.message); // Usa a nova função
+             this.logChatMessage(senderName, action.payload.message);
              return;
         }
+        
+        if (action.type === 'MANUAL_SHUFFLE_DECK') {
+            sender.deck = sender.deck.sort(() => Math.random() - 0.5);
+            this.renderizarTudo();
+            this.log(senderName, `embaralhou o próprio deck.`);
+            return;
+        }
 
-        if (action.type === 'MANUAL_ATTACK') {
-            this.log(senderName, `declarou um ataque de ${action.payload.attackerName} a ${action.payload.defenderName}.`);
+        if (action.type === 'MANUAL_MILL_TOP_CARD') {
+            if(sender.deck.length > 0) {
+                const milledCard = sender.deck.pop();
+                sender.cemiterio.push(milledCard);
+                this.renderizarTudo();
+                this.log(senderName, `enviou ${milledCard.nome} do topo do deck para o cemitério.`, milledCard);
+            }
             return;
         }
 
         const targetCard = this.findCardByUid(action.payload.cardUID);
-        if (!targetCard) return;
+        if (!targetCard && action.type !== 'MANUAL_ATTACK') return;
+
 
         switch(action.type) {
+            case 'MANUAL_ATTACK':
+                const attacker = this.findCardByUid(action.payload.attackerUID);
+                const defender = this.findCardByUid(action.payload.defenderUID);
+                this.log(senderName, `declarou um ataque de ${attacker.nome} a ${defender.nome}.`, attacker);
+                break;
             case 'MANUAL_FLIP_CARD':
                 targetCard.faceDown = !targetCard.faceDown;
-                this.log(senderName, `Virou ${action.payload.cardName} para ${targetCard.faceDown ? 'baixo' : 'cima'}.`);
                 this.renderizarTudo();
+                this.log(senderName, `Virou ${targetCard.nome} para ${targetCard.faceDown ? 'baixo' : 'cima'}.`, targetCard);
                 break;
             case 'MANUAL_TRANSFORM_GENERAL':
                 if (targetCard.tipo === 'General' && targetCard.segundaFace) {
@@ -143,11 +152,11 @@ export const Game = {
                     if (targetCard.transformed) {
                         Object.assign(targetCard, targetCard._primeiraFace);
                         targetCard.transformed = false;
-                        this.log(senderName, `reverteu ${targetCard._primeiraFace.nome}.`);
+                        this.log(senderName, `reverteu ${targetCard.nome}.`, targetCard);
                     } else {
                         Object.assign(targetCard, targetCard.segundaFace);
                         targetCard.transformed = true;
-                        this.log(senderName, `transformou o General em ${targetCard.nome}!`);
+                        this.log(senderName, `transformou o General em ${targetCard.nome}!`, targetCard);
                     }
                     targetCard.vidaAtual = targetCard.vida; 
                     targetCard.ataqueAtual = targetCard.ataque;
@@ -155,24 +164,24 @@ export const Game = {
                 this.renderizarTudo();
                 break;
             case 'MANUAL_ACTIVATE_ABILITY':
-                this.log(senderName, `ativou a habilidade de ${action.payload.cardName}.`);
                 const cardEl = document.querySelector(`[data-uid="${targetCard.uid}"]`);
                 if (cardEl) {
                     cardEl.classList.add('ability-activated');
                     setTimeout(() => {
                         cardEl.classList.remove('ability-activated');
-                    }, 1000); // Duração da animação em ms
+                    }, 1000);
                 }
+                this.log(senderName, `ativou a habilidade de ${targetCard.nome}.`, targetCard);
                 break;
             case 'MANUAL_CHANGE_STATS':
                 targetCard.ataqueAtual = action.payload.atk;
                 targetCard.vidaAtual = action.payload.vida;
-                this.log(senderName, `Alterou os status de ${action.payload.cardName} para ${targetCard.ataqueAtual}/${targetCard.vidaAtual}.`);
                 this.renderizarTudo();
+                this.log(senderName, `Alterou os status de ${targetCard.nome} para ${targetCard.ataqueAtual}/${targetCard.vidaAtual}.`, targetCard);
                 break;
             case 'MANUAL_MOVE_CARD':
-                 this.executarMoverCarta(targetCard, action.payload);
-                 this.log(senderName, `Moveu ${action.payload.cardName} para ${action.payload.destination}.`);
+                 this.executarMoverCarta(targetCard, action.payload, action.senderUid);
+                 this.log(senderName, `Moveu ${targetCard.nome} para ${action.payload.destination}.`, targetCard);
                  break;
         }
     },
@@ -219,22 +228,32 @@ export const Game = {
         sendGameAction({ type, payload });
     },
 
-    executarMoverCarta(carta, payload) {
-        const jogador = this.jogadores.find(p => p.uid === carta.owner.uid);
+    executarMoverCarta(carta, payload, senderUid) {
+        const jogador = carta.owner;
         if (!jogador) return;
-
+    
         const fromRect = document.querySelector(`[data-uid="${carta.uid}"]`)?.getBoundingClientRect();
-        
-        if (payload.fromZone === 'mao') {
-            const index = jogador.mao.findIndex(c => c.uid === carta.uid);
-            if (index > -1) jogador.mao.splice(index, 1);
-        } else if (payload.fromZone === 'campo') {
-            jogador.campo[payload.fromSlot] = null;
-        } else if (payload.fromZone === 'conflito') {
-            const index = this.zonaDeConflito.findIndex(c => c.uid === carta.uid);
-            if (index > -1) this.zonaDeConflito.splice(index, 1);
+    
+        // Remove a carta de todas as zonas possíveis
+        const maoIndex = jogador.mao.findIndex(c => c.uid === carta.uid);
+        if (maoIndex > -1) jogador.mao.splice(maoIndex, 1);
+    
+        for (const slot in jogador.campo) {
+            if (jogador.campo[slot] && jogador.campo[slot].uid === carta.uid) {
+                jogador.campo[slot] = null;
+            }
         }
-
+    
+        const conflitoIndex = this.zonaDeConflito.findIndex(c => c.uid === carta.uid);
+        if (conflitoIndex > -1) this.zonaDeConflito.splice(conflitoIndex, 1);
+    
+        const cemiterioIndex = jogador.cemiterio.findIndex(c => c.uid === carta.uid);
+        if (cemiterioIndex > -1) jogador.cemiterio.splice(cemiterioIndex, 1);
+    
+        const deckIndex = jogador.deck.findIndex(c => c.uid === carta.uid);
+        if (deckIndex > -1) jogador.deck.splice(deckIndex, 1);
+    
+        // Adiciona a carta à nova zona
         if (payload.destination === 'campo') {
             jogador.campo[payload.destinationSlot] = carta;
             carta.zona = 'campo';
@@ -242,15 +261,22 @@ export const Game = {
         } else if (payload.destination === 'mao') {
             jogador.mao.push(carta);
             carta.zona = 'mao';
+            carta.slot = null;
         } else if (payload.destination === 'cemiterio') {
             jogador.cemiterio.push(carta);
             carta.zona = 'cemiterio';
+            carta.slot = null;
         } else if (payload.destination === 'conflito') {
             this.zonaDeConflito.push(carta);
             carta.zona = 'conflito';
+            carta.slot = null;
+        } else if (payload.destination === 'deck') {
+            jogador.deck.push(carta);
+            carta.zona = 'deck';
+            carta.slot = null;
         }
-
-        if (fromRect) {
+    
+        if (fromRect && senderUid === this.onlineState.localPlayerUid) {
             animateCardMove(fromRect, carta);
         } else {
             this.renderizarTudo();
@@ -260,7 +286,7 @@ export const Game = {
     iniciarAtaqueComCarta(carta) {
         this.estado = 'ATACANDO';
         this.atacanteSelecionado = carta;
-        this.log('Sistema', `Você selecionou ${carta.nome} para atacar. Selecione um alvo.`);
+        this.log('Sistema', `Você selecionou ${carta.nome} para atacar. Selecione um alvo.`, carta);
         this.renderizarTudo();
     },
 
@@ -268,12 +294,10 @@ export const Game = {
         if (this.estado !== 'ATACANDO' || !this.atacanteSelecionado) return;
         
         this.enviarAcao('MANUAL_ATTACK', {
-            attackerName: this.atacanteSelecionado.nome,
-            defenderName: alvo.nome,
+            attackerUID: this.atacanteSelecionado.uid,
+            defenderUID: alvo.uid,
         });
         
-        this.log('Você', `declarou um ataque de ${this.atacanteSelecionado.nome} a ${alvo.nome}.`);
-
         this.atacanteSelecionado = null;
         this.estado = 'LIVRE';
         this.renderizarTudo();
@@ -318,7 +342,6 @@ export const Game = {
         this.isGameRunning = false;
         const log = document.getElementById('game-log');
         if (log) log.innerHTML = '';
-        // Limpa também o chat ao reiniciar o jogo
         const chat = document.getElementById('chat-messages');
         if (chat) chat.innerHTML = '';
     }

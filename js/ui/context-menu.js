@@ -6,6 +6,7 @@ const contextMenu = document.getElementById('context-menu');
 let menuTimer = null;
 let targetCard = null;
 let targetSlot = null;
+let targetZoneType = null;
 let isMenuVisible = false;
 
 const baseOptions = {
@@ -22,7 +23,6 @@ const baseOptions = {
         { label: '-1 Vida', action: 'statChange', details: { stat: 'vida', amount: -1 } },
     ]}
 };
-
 
 function createMenuItem(option) {
     if (option.type === 'row') {
@@ -64,13 +64,38 @@ function createMenuItem(option) {
     return item;
 }
 
-function handleAction(action, details = {}) {
+async function handleAction(action, details = {}) {
+    // Ações que não têm uma carta alvo (como clicar no deck)
+    if (!targetCard && ['openDeck', 'shuffleDeck', 'millTopCard'].includes(action)) {
+        const playerPrefix = targetSlot; // Neste caso, targetSlot foi usado para passar 'jogador' ou 'oponente'
+        
+        switch (action) {
+            case 'openDeck': {
+                const player = playerPrefix === 'jogador' ? Game.jogadores[Game.controleAtivo] : Game.jogadores[(Game.controleAtivo + 1) % 2];
+                if (player) {
+                    const { showZonePopup } = await import('../game/game-renderer.js');
+                    showZonePopup(`${player.nome} - Deck`, player.deck, 'deck');
+                }
+                break;
+            }
+            case 'shuffleDeck':
+                Game.enviarAcao('MANUAL_SHUFFLE_DECK', {});
+                break;
+            case 'millTopCard':
+                Game.enviarAcao('MANUAL_MILL_TOP_CARD', {});
+                break;
+        }
+        hideContextMenu(true);
+        return;
+    }
+
+
     if (!targetCard) return;
 
     let payload = {
         cardUID: targetCard.uid,
         cardName: targetCard.nome,
-        fromZone: targetCard.zona,
+        fromZone: targetZoneType, // 'mao', 'campo', 'cemiterio', 'deck', etc.
         fromSlot: targetSlot,
         ...details
     };
@@ -112,54 +137,74 @@ function handleAction(action, details = {}) {
     hideContextMenu(true);
 }
 
-export function showContextMenu(event, card, slot) {
+export function showContextMenu(event, card, slot, zoneType) {
     clearTimeout(menuTimer);
     
-    const localPlayer = Game.jogadores[Game.controleAtivo];
-    if (card.owner !== localPlayer) return;
-
     targetCard = card;
     targetSlot = slot;
+    targetZoneType = zoneType;
+
+    const localPlayer = Game.jogadores[Game.controleAtivo];
+    if (card && card.owner !== localPlayer) return;
 
     contextMenu.innerHTML = '';
     
     const options = [];
     const moveSubmenu = [];
     const localPlayerField = localPlayer.campo;
-
-    if (card.zona === 'campo') {
+    
+    if (zoneType === 'campo') {
         options.push(baseOptions.attack);
-        if (card.tipo === 'General') {
-            options.push(baseOptions.transform);
-        }
-        options.push(baseOptions.activate); // Adiciona o botão de ativar habilidade
+        if (card.tipo === 'General') options.push(baseOptions.transform);
+        options.push(baseOptions.activate);
         options.push(baseOptions.statsAtk, baseOptions.statsVida);
         
         moveSubmenu.push({ label: 'Conflito', action: 'moveTo', destination: 'conflito' });
         moveSubmenu.push({ label: 'Mão', action: 'moveTo', destination: 'mao' });
         moveSubmenu.push({ label: 'Cemitério', action: 'moveTo', destination: 'cemiterio' });
     } 
-    else if (card.zona === 'mao') {
+    else if (zoneType === 'mao') {
         options.push(baseOptions.play);
         moveSubmenu.push({ label: 'Cemitério', action: 'moveTo', destination: 'cemiterio' });
     }
-    else if (card.zona === 'conflito') {
+    else if (zoneType === 'conflito') {
         options.push(baseOptions.statsAtk, baseOptions.statsVida);
         
         const slots = card.tipo === 'Unidade' ? ['u1', 'u2', 'u3'] : ['s1', 's2'];
         slots.forEach(s => {
             if (!localPlayerField[s]) {
-                moveSubmenu.push({ label: s.toUpperCase(), action: 'moveTo', destination: 'campo', details: { destinationSlot: s } });
+                moveSubmenu.push({ label: `Campo (${s.toUpperCase()})`, action: 'moveTo', destination: 'campo', details: { destinationSlot: s } });
             }
         });
         moveSubmenu.push({ label: 'Mão', action: 'moveTo', destination: 'mao' });
         moveSubmenu.push({ label: 'Cemitério', action: 'moveTo', destination: 'cemiterio' });
     }
-
-    // **CORREÇÃO**: Apenas adiciona o menu "Mover" se a carta não for um General
-    if (moveSubmenu.length > 0 && card.tipo !== 'General') {
-        options.push({ label: 'Mover', action: 'submenu', submenu: moveSubmenu });
+    else if (zoneType === 'cemiterio' || (zoneType === 'deck' && card)) {
+        moveSubmenu.push({ label: 'Mão', action: 'moveTo', destination: 'mao' });
+        const slots = card.tipo === 'Unidade' ? ['u1', 'u2', 'u3'] : ['s1', 's2'];
+        slots.forEach(s => {
+             if (!localPlayerField[s]) {
+                moveSubmenu.push({ label: `Campo (${s.toUpperCase()})`, action: 'moveTo', destination: 'campo', details: { destinationSlot: s } });
+            }
+        });
+        if(zoneType === 'deck') moveSubmenu.push({ label: 'Cemitério', action: 'moveTo', destination: 'cemiterio' });
+        if(zoneType === 'cemiterio') moveSubmenu.push({ label: 'Deck (Topo)', action: 'moveTo', destination: 'deck' });
     }
+    else if (slot === 'deck' && !card) {
+        const playerPrefix = zoneType; // 'jogador' ou 'oponente'
+        if (playerPrefix === 'jogador') {
+            options.push({ label: 'Abrir Deck', action: 'openDeck'});
+            options.push({ label: 'Embaralhar', action: 'shuffleDeck'});
+            options.push({ label: 'Enviar carta do topo para o descarte', action: 'millTopCard'});
+        }
+        targetSlot = playerPrefix;
+    }
+
+    if (moveSubmenu.length > 0 && card?.tipo !== 'General') {
+        options.push({ label: 'Mover Para', action: 'submenu', submenu: moveSubmenu });
+    }
+
+    if(options.length === 0) return;
 
     options.forEach(option => {
         contextMenu.appendChild(createMenuItem(option));
@@ -167,14 +212,14 @@ export function showContextMenu(event, card, slot) {
 
     contextMenu.style.display = 'block';
     
-    const cardRect = event.currentTarget.getBoundingClientRect();
+    const targetRect = event.currentTarget.getBoundingClientRect();
     const menuHeight = contextMenu.offsetHeight;
     const menuWidth = contextMenu.offsetWidth;
 
-    let top = cardRect.top - menuHeight - 5;
-    if (top < 0) top = cardRect.bottom + 5;
+    let top = targetRect.top - menuHeight - 5;
+    if (top < 0) top = targetRect.bottom + 5;
 
-    let left = cardRect.left + (cardRect.width / 2) - (menuWidth / 2);
+    let left = targetRect.left + (targetRect.width / 2) - (menuWidth / 2);
     if (left < 0) left = 5;
     if (left + menuWidth > window.innerWidth) left = window.innerWidth - menuWidth - 5;
 

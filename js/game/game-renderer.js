@@ -2,7 +2,7 @@
 
 import { Game } from './game.js';
 import { PHASES, PHASES_ABBR } from './game-constants.js';
-import { admitirDerrota, mudarFaseManualmente, iniciarArrasto } from './game-actions.js';
+import { admitirDerrota, mudarFaseManualmente } from './game-actions.js';
 import { Carta } from './game-engine.js';
 import { showContextMenu, hideContextMenu } from '../ui/context-menu.js';
 
@@ -41,14 +41,11 @@ function renderizarLadoDoCampo(prefixo, jogador) {
                 if (carta.isAnimating) cartaEl.style.visibility = 'hidden';
                 
                 carta.zona = 'campo';
-                cartaEl.addEventListener('mouseenter', (e) => {
-                    showPreview(carta);
-                    showContextMenu(e, carta, slot);
+                cartaEl.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                    showContextMenu(e, carta, slot, 'campo');
                 });
-                cartaEl.addEventListener('mouseleave', () => {
-                    showPreview(null);
-                    hideContextMenu();
-                });
+                cartaEl.addEventListener('mouseenter', (e) => showPreview(carta));
                 adicionarListenersDeAtaque(cartaEl, carta);
 
                 zonaEl.appendChild(cartaEl);
@@ -66,14 +63,11 @@ export function renderizarMaos(localPlayer, opponentPlayer) {
         const el = carta.criarElementoHTML();
         if (carta.isAnimating) el.style.visibility = 'hidden';
         
-        el.addEventListener('mouseenter', (e) => {
-            showPreview(carta);
-            showContextMenu(e, carta, null);
+        el.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            showContextMenu(e, carta, null, 'mao');
         });
-        el.addEventListener('mouseleave', () => {
-            showPreview(null);
-            hideContextMenu();
-        });
+        el.addEventListener('mouseenter', (e) => showPreview(carta));
         maoJogadorEl.appendChild(el);
     });
 
@@ -111,19 +105,29 @@ function adicionarListenersDeAtaque(cartaEl, carta) {
 function renderizarDeckECemiterio(prefixo, jogador) {
     const deckZone = document.getElementById(`${prefixo}-deck`);
     if (deckZone) {
-        deckZone.innerHTML = '';
+        const newDeckZone = deckZone.cloneNode(false);
+        deckZone.parentNode.replaceChild(newDeckZone, deckZone);
+        
         if (jogador.deck.length > 0) {
             const el = new Carta({}, -1, jogador).criarElementoVerso();
             const count = document.createElement('div');
             count.className = 'count-in-zone';
             count.textContent = jogador.deck.length;
             el.appendChild(count);
-            deckZone.appendChild(el);
+            newDeckZone.appendChild(el);
         }
+        
+        newDeckZone.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            showContextMenu(e, null, 'deck', prefixo);
+        });
     }
+    
     const cemiterioZone = document.getElementById(`${prefixo}-cemiterio`);
     if (cemiterioZone) {
-        cemiterioZone.innerHTML = '';
+        const newCemZone = cemiterioZone.cloneNode(false);
+        cemiterioZone.parentNode.replaceChild(newCemZone, cemiterioZone);
+
         if (jogador.cemiterio.length > 0) {
             const ultimaCarta = jogador.cemiterio[jogador.cemiterio.length - 1];
             const el = ultimaCarta.criarElementoHTML();
@@ -131,10 +135,15 @@ function renderizarDeckECemiterio(prefixo, jogador) {
             count.className = 'count-in-zone';
             count.textContent = jogador.cemiterio.length;
             el.appendChild(count);
-            cemiterioZone.appendChild(el);
+            newCemZone.appendChild(el);
         }
+        
+        newCemZone.addEventListener('click', () => {
+            showZonePopup(`${jogador.nome} - Cemitério`, jogador.cemiterio, 'cemiterio');
+        });
     }
 }
+
 function renderizarZonaDeConflito() {
     const conflictZoneEl = document.getElementById('area-de-conflito');
     if (!conflictZoneEl) return;
@@ -145,14 +154,11 @@ function renderizarZonaDeConflito() {
         if (carta.isAnimating) {
             cartaEl.style.visibility = 'hidden';
         }
-        cartaEl.addEventListener('mouseenter', (e) => {
-            showPreview(carta);
-            showContextMenu(e, carta, 'conflito');
+        cartaEl.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            showContextMenu(e, carta, null, 'conflito');
         });
-        cartaEl.addEventListener('mouseleave', () => {
-            showPreview(null);
-            hideContextMenu();
-        });
+        cartaEl.addEventListener('mouseenter', (e) => showPreview(carta));
         adicionarListenersDeAtaque(cartaEl, carta);
         conflictZoneEl.appendChild(cartaEl);
     });
@@ -215,6 +221,9 @@ export function setupUI() {
     criarOrbesDeFase();
     
     document.body.addEventListener('click', (e) => {
+        if (!e.target.closest('.context-menu')) {
+            hideContextMenu(true);
+        }
         if (Game.estado === 'ATACANDO') {
             const cardElement = e.target.closest('.card-container');
             const fieldElement = e.target.closest('#field');
@@ -223,6 +232,12 @@ export function setupUI() {
             }
         }
     });
+
+    const mainFieldContainer = document.querySelector('.main-field-container');
+    if (mainFieldContainer) {
+        mainFieldContainer.addEventListener('mouseleave', () => showPreview(null));
+    }
+
 
     const admitirDerrotaBtn = document.getElementById('admitir-derrota-btn');
     if (admitirDerrotaBtn) admitirDerrotaBtn.onclick = () => admitirDerrota();
@@ -242,6 +257,31 @@ export function setupUI() {
 
     if (chatSendBtn) chatSendBtn.onclick = sendChatMessage;
     if (chatInput) chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendChatMessage(); });
+
+    const popup = document.getElementById('zone-popup');
+    const closeBtn = document.getElementById('zone-popup-close-btn');
+    if (popup && closeBtn) {
+        closeBtn.onclick = () => popup.classList.add('hidden');
+        popup.addEventListener('click', (e) => {
+            if (e.target === popup) {
+                popup.classList.add('hidden');
+            }
+        });
+    }
+
+    const logContainer = document.getElementById('game-log');
+    if (logContainer) {
+        logContainer.addEventListener('click', (e) => {
+            if (e.target.classList.contains('card-link')) {
+                e.preventDefault();
+                const cardUID = e.target.dataset.uid;
+                const card = Game.findCardByUid(cardUID);
+                if (card) {
+                    showPreview(card);
+                }
+            }
+        });
+    }
 }
 function renderizarPlayerStats(prefixo, jogador) {
     const statsEl = document.getElementById(`${prefixo}-stats-display`);
@@ -251,46 +291,80 @@ function renderizarPlayerStats(prefixo, jogador) {
     if (vidaEl) vidaEl.textContent = jogador.general.vidaAtual;
     if (xpEl) xpEl.textContent = jogador.experiencia;
 }
+
 export function animateCardMove(fromRect, carta) {
-    carta.isAnimating = true;
     const clone = carta.criarElementoHTML();
     clone.classList.add('card-clone');
     clone.style.width = `${fromRect.width}px`;
     clone.style.height = `${fromRect.height}px`;
     clone.style.left = `${fromRect.left}px`;
     clone.style.top = `${fromRect.top}px`;
-    
     document.body.appendChild(clone);
-    
-    const originalEl = document.querySelector(`[data-uid="${carta.uid}"]`);
-    if(originalEl) originalEl.style.visibility = 'hidden';
 
-    renderizarTudo(); 
-
-    const toEl = document.querySelector(`[data-uid="${carta.uid}"]`);
-    if (!toEl) {
-        if(document.body.contains(clone)) document.body.removeChild(clone);
-        carta.isAnimating = false;
-        renderizarTudo();
-        return;
-    }
-    const toRect = toEl.getBoundingClientRect();
+    carta.isAnimating = true;
+    renderizarTudo();
 
     requestAnimationFrame(() => {
-        clone.style.left = `${toRect.left}px`;
-        clone.style.top = `${toRect.top}px`;
-        clone.style.width = `${toRect.width}px`;
-        clone.style.height = `${toRect.height}px`;
+        const toEl = document.querySelector(`[data-uid="${carta.uid}"]`);
+        if (!toEl) {
+            clone.style.opacity = '0';
+            clone.addEventListener('transitionend', () => {
+                if (document.body.contains(clone)) document.body.removeChild(clone);
+                carta.isAnimating = false;
+                renderizarTudo();
+            }, { once: true });
+            return;
+        }
+        
+        const toRect = toEl.getBoundingClientRect();
+
+        requestAnimationFrame(() => {
+            clone.style.left = `${toRect.left}px`;
+            clone.style.top = `${toRect.top}px`;
+            clone.style.width = `${toRect.width}px`;
+            clone.style.height = `${toRect.height}px`;
+        });
+
+        clone.addEventListener('transitionend', () => {
+            if (document.body.contains(clone)) {
+                document.body.removeChild(clone);
+            }
+            carta.isAnimating = false;
+            renderizarTudo();
+        }, { once: true });
+    });
+}
+
+
+export function showZonePopup(title, cardArray, zoneType) {
+    const popup = document.getElementById('zone-popup');
+    const titleEl = document.getElementById('zone-popup-title');
+    const cardsContainer = document.getElementById('zone-popup-cards');
+
+    if (!popup || !titleEl || !cardsContainer) return;
+
+    titleEl.textContent = `${title} (${cardArray.length})`;
+    cardsContainer.innerHTML = '';
+
+    const reversedCardArray = [...cardArray].reverse();
+
+    reversedCardArray.forEach(card => {
+        const cardEl = card.criarElementoHTML();
+        
+        cardEl.addEventListener('mouseenter', (e) => showPreview(card));
+        cardEl.addEventListener('mouseleave', () => showPreview(null)); 
+
+        cardEl.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            showContextMenu(e, card, null, zoneType);
+        });
+        
+        cardsContainer.appendChild(cardEl);
     });
 
-    clone.addEventListener('transitionend', () => {
-        if (document.body.contains(clone)) {
-            document.body.removeChild(clone);
-        }
-        carta.isAnimating = false;
-        renderizarTudo();
-    }, { once: true });
+    popup.classList.remove('hidden');
 }
+
 export function showDiceRollResult(roomData) {
     const overlay = document.getElementById('dice-roll-overlay');
     if (!overlay) return;
@@ -325,4 +399,21 @@ export function showDiceRollResult(roomData) {
 export function hideDiceRoll() {
     const overlay = document.getElementById('dice-roll-overlay');
     if (overlay) overlay.classList.add('hidden');
+}
+
+export function logMessage(sender, message, card = null) {
+    const logContainer = document.getElementById('game-log');
+    if (logContainer) {
+        const messageElement = document.createElement('p');
+        let finalMessage = message;
+
+        if (card) {
+            const cardLink = `<a href="#" class="card-link" data-uid="${card.uid}">${card.nome}</a>`;
+            finalMessage = message.replace(card.nome, cardLink);
+        }
+
+        messageElement.innerHTML = `<strong>${sender}:</strong> ${finalMessage}`;
+        logContainer.appendChild(messageElement);
+        logContainer.scrollTop = logContainer.scrollHeight;
+    }
 }
