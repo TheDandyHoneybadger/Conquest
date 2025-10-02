@@ -305,7 +305,8 @@ export function animateCardMove(fromRect, carta) {
     renderizarTudo();
 
     requestAnimationFrame(() => {
-        const toEl = document.querySelector(`[data-uid="${carta.uid}"]`);
+        // CORREÇÃO: O seletor agora procura especificamente por um .card-container
+        const toEl = document.querySelector(`.card-container[data-uid="${carta.uid}"]`);
         if (!toEl) {
             clone.style.opacity = '0';
             clone.addEventListener('transitionend', () => {

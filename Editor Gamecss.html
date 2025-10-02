@@ -29,11 +29,20 @@
             --field-padding-vertical: 10px;
             --field-padding-horizontal: 10px;
             --field-border-radius: 12px;
-            --field-flex-grow: 1; /* NOVO: Controla a altura vertical do tabuleiro */
+            --field-height: 80vh; 
             --tabuleiro-oponente-y: 0px;
             --area-conflito-y: 0px;
+            --area-conflito-x: 0px;
+            --area-conflito-width: 100%;
             --tabuleiro-jogador-y: 0px;
             --area-conflito-min-height: 100px;
+            --field-position-x: 0px;
+            --field-position-y: 0px;
+            
+            --card-font-size-preview: 10px;
+            --card-font-size-mao: 5px;
+            --card-font-size-campo: 3px;
+            --card-font-size-popup: 3px;
         }
         
         body { 
@@ -85,14 +94,28 @@
         .main-field-container {
             grid-area: main-field;
             display: flex;
-            flex-direction: column;
-            justify-content: space-between;
             height: 100%;
             overflow: hidden;
+            align-items: center; 
+            justify-content: center;
+            position: relative;
         }
         
+        #game-area-wrapper {
+            display: flex;
+            flex-direction: column;
+            transform: translate(var(--field-position-x), var(--field-position-y));
+            transition: transform 0.1s ease;
+            width: 100%;
+            height: 100%;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+        }
+
         #field { 
-            flex-grow: var(--field-flex-grow);
+            height: var(--field-height);
+            flex-shrink: 0;
             display: flex; 
             flex-direction: column; 
             justify-content: space-between; 
@@ -101,8 +124,9 @@
             gap: var(--field-gap); 
             padding: var(--field-padding-vertical) var(--field-padding-horizontal);
             border-radius: var(--field-border-radius);
-            margin: 0 auto;
+            margin: 10px auto;
             width: 100%;
+            max-width: 1200px;
             overflow: hidden;
         }
         
@@ -114,14 +138,26 @@
             display: flex; 
             justify-content: center; 
             align-items: center; 
-            position: relative; 
+            position: absolute; 
             z-index: 50; 
             padding: 0 20px; 
             height: var(--mao-height);
-            flex-shrink: 0;
+            left: 0;
+            right: 0;
         }
-        #mao-jogador { transform: translateY(var(--mao-jogador-y)); }
-        #mao-oponente { transform: translateY(var(--mao-oponente-y)); }
+        #mao-oponente {
+            top: 0;
+            transform: translateY(var(--mao-oponente-y));
+        }
+        #mao-jogador {
+            bottom: 0;
+            transform: translateY(var(--mao-jogador-y));
+        }
+
+        .mao .carta {
+            font-size: var(--card-font-size-mao);
+        }
+        
         .mao .card-container { width: var(--mao-card-width); transition: transform 0.2s ease, z-index 0s ease 0.1s; margin: 0 var(--mao-card-margin); flex-shrink: 0; }
         .mao .card-container:hover { transform: translateY(-15px) scale(1.1); z-index: 100; }
         #mao-oponente .card-container { transform: rotate(180deg); }
@@ -129,27 +165,33 @@
 
         .lado-jogador { display: grid; grid-template-areas: "vazio1 u1 u2 u3 stats" "cemiterio s1 g s2 deck"; grid-template-columns: repeat(5, auto); gap: var(--lado-jogador-gap); width: auto; max-width: var(--lado-jogador-max-width); padding: 0; align-items: center; justify-items: center; justify-content: center; }
         .lado-jogador.oponente { grid-template-areas: "deck s2 g s1 cemiterio" "stats u3 u2 u1 vazio1"; }
-        .zona { border: 2px solid var(--cor-borda-painel-transparente); border-radius: 6px; position: relative; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.2); width: var(--field-card-width); height: var(--field-card-height); }
+        .zona { border: 2px solid var(--cor-borda-painel-transparente); border-radius: 6px; position: relative; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.2); width: var(--field-card-width); height: var(--field-card-height); cursor: pointer; }
+        .zona .carta { font-size: var(--card-font-size-campo); }
         .zona.general { border-width: 3px; border-style: double; }
         .general-stats-display { display: flex; flex-direction: column; justify-content: center; gap: 4px; background-color: var(--cor-painel-transparente); padding: 8px; border-radius: 6px; border: 1px solid var(--cor-borda-painel-transparente); color: white; font-weight: bold; align-self: center; width: var(--field-card-width); height: var(--field-card-height); font-size: var(--stats-font-size); }
         .stat-item { display: flex; align-items: center; gap: 5px; transform: scale(0.8); }
         
         #area-de-conflito {
             display: flex;
-            flex-direction: row-reverse;
+            flex-direction: row;
+            flex-wrap: wrap;
             gap: 8px;
             justify-content: center;
             align-items: center;
-            min-height: var(--area-conflito-min-height); 
+            min-height: var(--area-conflito-min-height);
+            width: var(--area-conflito-width);
             padding: 10px; 
             border-top: 2px solid var(--cor-borda-painel); 
             border-bottom: 2px solid var(--cor-borda-painel); 
             background: rgba(20, 20, 20, 0.6); 
             border-radius: 8px; 
-            margin: 5px 0;
+            margin: 5px auto;
             position: relative; 
             transition: transform 0.1s ease;
-            transform: translateY(var(--area-conflito-y));
+            transform: translate(var(--area-conflito-x), var(--area-conflito-y));
+        }
+        #area-de-conflito .carta {
+             font-size: var(--card-font-size-campo);
         }
         #area-de-conflito .card-container { 
             width: var(--field-card-width);
@@ -157,18 +199,96 @@
             flex-shrink: 0;
         }
 
+        #game-card-preview { flex: 1 1 auto; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+        #game-card-preview-display { width: 100%; aspect-ratio: 63 / 88; background: rgba(0,0,0,0.5); border-radius: 8px; border: 2px dashed var(--cor-borda-painel-transparente); transition: all 0.3s ease; flex-shrink: 0; }
+        #game-card-preview-display .carta {
+            font-size: var(--card-font-size-preview);
+        }
+
         #oponente-cemiterio, #jogador-cemiterio { grid-area: cemiterio; } #oponente-s1, #jogador-s1 { grid-area: s1; } #oponente-g, #jogador-g { grid-area: g; } #oponente-s2, #jogador-s2 { grid-area: s2; } #oponente-deck, #jogador-deck { grid-area: deck; } #oponente-u1, #jogador-u1 { grid-area: u1; } #oponente-u2, #jogador-u2 { grid-area: u2; } #oponente-u3, #jogador-u3 { grid-area: u3; } #oponente-stats-display, #jogador-stats-display { grid-area: stats; }
+
+        .overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.8); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .overlay.hidden { display: none; }
+        .zone-popup-content {
+            background: var(--cor-painel);
+            border: 2px solid var(--cor-borda-painel);
+            border-radius: 12px;
+            width: 90%;
+            max-width: 1000px;
+            height: 80vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 5px 30px rgba(0,0,0,0.6);
+        }
+        .zone-popup-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            border-bottom: 1px solid var(--cor-borda-painel-transparente);
+        }
+        .zone-popup-header h3 {
+            margin: 0;
+            color: var(--cor-destaque);
+            font-family: 'Lora', serif;
+        }
+        #zone-popup-close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 2em;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .zone-popup-cards {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 15px;
+            align-content: flex-start;
+            justify-items: center;
+        }
+        .zone-popup-cards .card-container {
+            width: var(--field-card-width);
+            height: var(--field-card-height);
+        }
+        .zone-popup-cards .carta {
+            font-size: var(--card-font-size-popup);
+        }
+
+        .game-log .card-link {
+            color: var(--cor-destaque);
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .game-log .card-link:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
 
     <div class="game-screen-editor">
         <div class="game-ui-panel left-panel">
+            <div id="game-card-preview">
+                <div id="game-card-preview-display"></div>
+                <div id="game-card-preview-content"></div>
+            </div>
             <div class="control-group">
                 <h3>Tabuleiro Principal (#field)</h3>
                 <div class="control">
-                    <div class="control-inline"><label for="field-flex-grow">Altura Vertical do Tabuleiro</label><span id="field-flex-grow-value">1</span></div>
-                    <input type="range" id="field-flex-grow" min="0.1" max="5" step="0.1" value="1">
+                    <div class="control-inline"><label for="field-height">Altura Vertical do Tabuleiro</label><span id="field-height-value">80vh</span></div>
+                    <input type="range" id="field-height" min="30" max="150" step="1" value="80">
+                </div>
+                 <div class="control">
+                    <div class="control-inline"><label for="field-position-x">Posição Horizontal (X)</label><span id="field-position-x-value">0px</span></div>
+                    <input type="range" id="field-position-x" min="-500" max="500" value="0">
+                </div>
+                 <div class="control">
+                    <div class="control-inline"><label for="field-position-y">Posição Vertical (Y)</label><span id="field-position-y-value">0px</span></div>
+                    <input type="range" id="field-position-y" min="-500" max="500" value="0">
                 </div>
                  <div class="control">
                     <div class="control-inline"><label for="field-gap">Espaçamento Entre Seções</label><span id="field-gap-value">5px</span></div>
@@ -187,6 +307,102 @@
                     <input type="range" id="field-border-radius" min="0" max="30" value="12">
                 </div>
             </div>
+        </div>
+
+        <div class="main-field-container">
+            <div id="game-area-wrapper">
+                <div id="field">
+                    <div class="tabuleiro oponente">
+                        <div class="lado-jogador oponente">
+                            <div id="oponente-deck" class="zona"><div class="card-container"><div class="carta nacao-kragmar"><div class="carta-verso-jogo"></div></div></div></div>
+                            <div id="oponente-s2" class="zona"></div>
+                            <div id="oponente-g" class="zona general"><div class="card-container"><div class="carta tipo-general nacao-kragmar"></div></div></div>
+                            <div id="oponente-s1" class="zona"></div>
+                            <div id="oponente-cemiterio" class="zona cemiterio"></div>
+                            <div id="oponente-stats-display" class="general-stats-display"><div class="stat-item">❤️ <span>28</span></div><div class="stat-item">⭐ <span>1</span></div></div>
+                            <div id="oponente-u3" class="zona"></div>
+                            <div id="oponente-u2" class="zona"><div class="card-container"><div class="carta tipo-unidade nacao-kragmar"></div></div></div>
+                            <div id="oponente-u1" class="zona"></div>
+                        </div>
+                    </div>
+                    <div id="area-de-conflito">
+                        <div class="card-container">
+                            <div class="carta tipo-unidade nacao-noxaeterna">
+                                <div class="carta-face carta-face-front">
+                                    <div class="carta-arte"></div>
+                                    <div class="template-overlay"></div>
+                                    <div class="nation-logo"></div>
+                                    <div class="carta-atributos">
+                                        <div class="atributo atributo-xp">4</div>
+                                        <div class="atributo atributo-atk">2</div>
+                                        <div class="atributo atributo-vida">3</div>
+                                    </div>
+                                    <div class="carta-nacao">Noxaeterna / Unidade</div>
+                                    <div class="carta-nome">Ceifador de Almas</div>
+                                    <div class="carta-descricao">Toque Mortal.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tabuleiro jogador">
+                        <div class="lado-jogador jogador">
+                            <div id="jogador-u1" class="zona">
+                                <div class="card-container">
+                                    <div class="carta tipo-unidade nacao-aethel">
+                                        <div class="carta-face carta-face-front">
+                                            <div class="carta-arte"></div>
+                                            <div class="template-overlay"></div>
+                                            <div class="nation-logo"></div>
+                                            <div class="carta-atributos">
+                                                <div class="atributo atributo-xp">3</div>
+                                                <div class="atributo atributo-atk">2</div>
+                                                <div class="atributo atributo-vida">4</div>
+                                            </div>
+                                            <div class="carta-nacao">Aethel / Unidade</div>
+                                            <div class="carta-nome">Hoplita Resoluto</div>
+                                            <div class="carta-descricao">Proteger (1).</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="jogador-u2" class="zona"></div>
+                            <div id="jogador-u3" class="zona"></div>
+                             <div id="jogador-stats-display" class="general-stats-display"><div class="stat-item">❤️ <span>30</span></div><div class="stat-item">⭐ <span>1</span></div></div>
+                            <div id="jogador-cemiterio" class="zona cemiterio"></div>
+                            <div id="jogador-s1" class="zona"><div class="card-container"><div class="carta tipo-suporte nacao-aethel"></div></div></div>
+                            <div id="jogador-g" class="zona general"><div class="card-container"><div class="carta tipo-general nacao-aethel"></div></div></div>
+                            <div id="jogador-s2" class="zona"></div>
+                            <div id="jogador-deck" class="zona"><div class="card-container"><div class="carta nacao-aethel"><div class="carta-verso-jogo"></div></div></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="mao-oponente" class="mao">
+                 <div class="card-container"><div class="carta nacao-kragmar"><div class="carta-verso-jogo"></div></div></div>
+                 <div class="card-container"><div class="carta nacao-kragmar"><div class="carta-verso-jogo"></div></div></div>
+                 <div class="card-container"><div class="carta nacao-kragmar"><div class="carta-verso-jogo"></div></div></div>
+            </div>
+            <div id="mao-jogador" class="mao">
+                 <div class="card-container">
+                    <div class="carta tipo-acao nacao-kragmar">
+                        <div class="carta-face carta-face-front">
+                            <div class="carta-arte"></div>
+                            <div class="template-overlay"></div>
+                            <div class="nation-logo"></div>
+                            <div class="carta-atributos">
+                                <div class="atributo atributo-xp">4</div>
+                            </div>
+                            <div class="carta-nacao">Kragmar / Ação</div>
+                            <div class="carta-nome">Lança de Magma</div>
+                            <div class="carta-descricao">Cause 4 de dano a uma unidade alvo.</div>
+                        </div>
+                    </div>
+                 </div>
+                 <div class="card-container"><div class="carta tipo-unidade nacao-aethel"></div></div>
+            </div>
+        </div>
+
+        <div class="game-ui-panel right-panel">
              <div class="control-group">
                 <h3>Cartas no Campo & Zonas</h3>
                 <div class="control">
@@ -206,66 +422,6 @@
                     <input type="range" id="stats-font-size" min="0.5" max="1.5" step="0.1" value="1">
                 </div>
             </div>
-        </div>
-
-        <div class="main-field-container">
-            <div id="mao-oponente" class="mao">
-                 <div class="card-container"><div class="carta nacao-kragmar"><div class="carta-verso-jogo"></div></div></div>
-                 <div class="card-container"><div class="carta nacao-kragmar"><div class="carta-verso-jogo"></div></div></div>
-                 <div class="card-container"><div class="carta nacao-kragmar"><div class="carta-verso-jogo"></div></div></div>
-                 <div class="card-container"><div class="carta nacao-kragmar"><div class="carta-verso-jogo"></div></div></div>
-                 <div class="card-container"><div class="carta nacao-kragmar"><div class="carta-verso-jogo"></div></div></div>
-                 <div class="card-container"><div class="carta nacao-kragmar"><div class="carta-verso-jogo"></div></div></div>
-            </div>
-            <div id="field">
-                <div class="tabuleiro oponente">
-                    <div class="lado-jogador oponente">
-                        <div id="oponente-deck" class="zona"><div class="card-container"><div class="carta nacao-kragmar"><div class="carta-verso-jogo"></div></div></div></div>
-                        <div id="oponente-s2" class="zona"></div>
-                        <div id="oponente-g" class="zona general"><div class="card-container"><div class="carta tipo-general nacao-kragmar"></div></div></div>
-                        <div id="oponente-s1" class="zona"></div>
-                        <div id="oponente-cemiterio" class="zona cemiterio"></div>
-                        <div id="oponente-stats-display" class="general-stats-display"><div class="stat-item">❤️ <span>28</span></div><div class="stat-item">⭐ <span>1</span></div></div>
-                        <div id="oponente-u3" class="zona"></div>
-                        <div id="oponente-u2" class="zona"><div class="card-container"><div class="carta tipo-unidade nacao-kragmar"></div></div></div>
-                        <div id="oponente-u1" class="zona"></div>
-                    </div>
-                </div>
-                <div id="area-de-conflito">
-                    <div class="card-container"><div class="carta tipo-unidade nacao-aethel"></div></div>
-                    <div class="card-container"><div class="carta tipo-unidade nacao-kragmar"></div></div>
-                    <div class="card-container"><div class="carta tipo-unidade nacao-sylvanis"></div></div>
-                    <div class="card-container"><div class="carta tipo-unidade nacao-noxaeterna"></div></div>
-                    <div class="card-container"><div class="carta tipo-unidade nacao-leviathus"></div></div>
-                    <div class="card-container"><div class="carta tipo-unidade nacao-aethel"></div></div>
-                    <div class="card-container"><div class="carta tipo-unidade nacao-kragmar"></div></div>
-                </div>
-                <div class="tabuleiro jogador">
-                    <div class="lado-jogador jogador">
-                        <div id="jogador-u1" class="zona"><div class="card-container"><div class="carta tipo-unidade nacao-aethel"></div></div></div>
-                        <div id="jogador-u2" class="zona"></div>
-                        <div id="jogador-u3" class="zona"></div>
-                         <div id="jogador-stats-display" class="general-stats-display"><div class="stat-item">❤️ <span>30</span></div><div class="stat-item">⭐ <span>1</span></div></div>
-                        <div id="jogador-cemiterio" class="zona cemiterio"></div>
-                        <div id="jogador-s1" class="zona"><div class="card-container"><div class="carta tipo-suporte nacao-aethel"></div></div></div>
-                        <div id="jogador-g" class="zona general"><div class="card-container"><div class="carta tipo-general nacao-aethel"></div></div></div>
-                        <div id="jogador-s2" class="zona"></div>
-                        <div id="jogador-deck" class="zona"><div class="card-container"><div class="carta nacao-aethel"><div class="carta-verso-jogo"></div></div></div></div>
-                    </div>
-                </div>
-            </div>
-            <div id="mao-jogador" class="mao">
-                 <div class="card-container"><div class="carta tipo-unidade nacao-aethel"></div></div>
-                 <div class="card-container"><div class="carta tipo-unidade nacao-aethel"></div></div>
-                 <div class="card-container"><div class="carta tipo-unidade nacao-aethel"></div></div>
-                 <div class="card-container"><div class="carta tipo-unidade nacao-aethel"></div></div>
-                 <div class="card-container"><div class="carta tipo-unidade nacao-aethel"></div></div>
-                 <div class="card-container"><div class="carta tipo-unidade nacao-aethel"></div></div>
-                 <div class="card-container"><div class="carta tipo-unidade nacao-aethel"></div></div>
-            </div>
-        </div>
-
-        <div class="game-ui-panel right-panel">
              <div class="control-group">
                 <h3>Mão do Jogador</h3>
                 <div class="control">
@@ -282,11 +438,11 @@
                 </div>
                  <div class="control">
                     <div class="control-inline"><label for="mao-jogador-y">Posição Vertical (Sua Mão)</label><span id="mao-jogador-y-value">0px</span></div>
-                    <input type="range" id="mao-jogador-y" min="-200" max="200" value="0">
+                    <input type="range" id="mao-jogador-y" min="-100" max="100" value="0">
                 </div>
                  <div class="control">
                     <div class="control-inline"><label for="mao-oponente-y">Posição Vertical (Mão Oponente)</label><span id="mao-oponente-y-value">0px</span></div>
-                    <input type="range" id="mao-oponente-y" min="-200" max="200" value="0">
+                    <input type="range" id="mao-oponente-y" min="-100" max="100" value="0">
                 </div>
             </div>
              <div class="control-group">
@@ -296,29 +452,86 @@
                     <input type="range" id="tabuleiro-oponente-y" min="-200" max="100" value="0">
                 </div>
                 <div class="control">
-                    <div class="control-inline"><label for="area-conflito-y">Posição da Zona de Conflito</label><span id="area-conflito-y-value">0px</span></div>
-                    <input type="range" id="area-conflito-y" min="-200" max="100" value="0">
-                </div>
-                <div class="control">
                     <div class="control-inline"><label for="area-conflito-height">Altura da Zona de Conflito</label><span id="area-conflito-height-value">100px</span></div>
                     <input type="range" id="area-conflito-height" min="50" max="300" value="100">
+                </div>
+                <div class="control">
+                    <div class="control-inline"><label for="area-conflito-width">Largura da Zona de Conflito</label><span id="area-conflito-width-value">100%</span></div>
+                    <input type="range" id="area-conflito-width" min="10" max="100" value="100">
+                </div>
+                 <div class="control">
+                    <div class="control-inline"><label for="area-conflito-x">Posição X da Zona de Conflito</label><span id="area-conflito-x-value">0px</span></div>
+                    <input type="range" id="area-conflito-x" min="-500" max="500" value="0">
+                </div>
+                <div class="control">
+                    <div class="control-inline"><label for="area-conflito-y">Posição Y da Zona de Conflito</label><span id="area-conflito-y-value">0px</span></div>
+                    <input type="range" id="area-conflito-y" min="-200" max="100" value="0">
                 </div>
                 <div class="control">
                     <div class="control-inline"><label for="tabuleiro-jogador-y">Seu Tabuleiro</label><span id="tabuleiro-jogador-y-value">0px</span></div>
                     <input type="range" id="tabuleiro-jogador-y" min="-200" max="100" value="0">
                 </div>
             </div>
+            <div class="control-group">
+                <h3>Tipografia das Cartas</h3>
+                <div class="control">
+                    <div class="control-inline"><label for="card-font-size-preview">Fonte da Carta (Preview)</label><span id="card-font-size-preview-value">10px</span></div>
+                    <input type="range" id="card-font-size-preview" min="5" max="20" step="0.5" value="10">
+                </div>
+                <div class="control">
+                    <div class="control-inline"><label for="card-font-size-mao">Fonte da Carta (Mão)</label><span id="card-font-size-mao-value">5px</span></div>
+                    <input type="range" id="card-font-size-mao" min="2" max="10" step="0.1" value="5">
+                </div>
+                <div class="control">
+                    <div class="control-inline"><label for="card-font-size-campo">Fonte da Carta (Campo)</label><span id="card-font-size-campo-value">3px</span></div>
+                    <input type="range" id="card-font-size-campo" min="1" max="8" step="0.1" value="3">
+                </div>
+                 <div class="control">
+                    <div class="control-inline"><label for="card-font-size-popup">Fonte da Carta (Popup)</label><span id="card-font-size-popup-value">3px</span></div>
+                    <input type="range" id="card-font-size-popup" min="1" max="8" step="0.1" value="3">
+                </div>
+            </div>
             <button id="save-css-btn">Salvar e Baixar game.css</button>
         </div>
     </div>
+    
+    <div id="zone-popup" class="overlay hidden">
+        <div class="zone-popup-content">
+            <div class="zone-popup-header">
+                <h3 id="zone-popup-title">Deck do Jogador (34)</h3>
+                <button id="zone-popup-close-btn">&times;</button>
+            </div>
+            <div id="zone-popup-cards" class="zone-popup-cards">
+                <div class="card-container">
+                    <div class="carta tipo-unidade nacao-leviathus">
+                        <div class="carta-face carta-face-front">
+                            <div class="carta-arte"></div><div class="template-overlay"></div><div class="nation-logo"></div>
+                            <div class="carta-atributos">
+                                <div class="atributo atributo-xp">2</div>
+                                <div class="atributo atributo-atk">1</div>
+                                <div class="atributo atributo-vida">1</div>
+                            </div>
+                            <div class="carta-nacao">Leviathus / Unidade</div>
+                            <div class="carta-nome">Vidente das Marés</div>
+                            <div class="carta-descricao">Ao entrar, compre 1.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const root = document.documentElement;
             const CARD_ASPECT_RATIO = 88 / 63;
+            const LOCAL_STORAGE_KEY = 'gameCssEditorState_v3'; // Nova chave para evitar conflitos
 
             const controls = {
-                'field-flex-grow': { property: '--field-flex-grow', suffix: '' },
+                'field-height': { property: '--field-height', suffix: 'vh' },
+                'field-position-x': { property: '--field-position-x', suffix: 'px' },
+                'field-position-y': { property: '--field-position-y', suffix: 'px' },
                 'field-gap': { property: '--field-gap', suffix: 'px' },
                 'field-padding-vertical': { property: '--field-padding-vertical', suffix: 'px' },
                 'field-padding-horizontal': { property: '--field-padding-horizontal', suffix: 'px' },
@@ -334,51 +547,75 @@
                 'stats-font-size': { property: '--stats-font-size', suffix: 'em' },
                 'tabuleiro-oponente-y': { property: '--tabuleiro-oponente-y', suffix: 'px' },
                 'area-conflito-y': { property: '--area-conflito-y', suffix: 'px' },
+                'area-conflito-x': { property: '--area-conflito-x', suffix: 'px' },
+                'area-conflito-width': { property: '--area-conflito-width', suffix: '%' },
                 'tabuleiro-jogador-y': { property: '--tabuleiro-jogador-y', suffix: 'px' },
-                'area-conflito-height': { property: '--area-conflito-min-height', suffix: 'px' }
+                'area-conflito-height': { property: '--area-conflito-min-height', suffix: 'px' },
+                'card-font-size-preview': { property: '--card-font-size-preview', suffix: 'px'},
+                'card-font-size-mao': { property: '--card-font-size-mao', suffix: 'px'},
+                'card-font-size-campo': { property: '--card-font-size-campo', suffix: 'px'},
+                'card-font-size-popup': { property: '--card-font-size-popup', suffix: 'px'}
             };
+
+            function saveState() {
+                const state = {};
+                for (const id in controls) {
+                    const input = document.getElementById(id);
+                    if (input) state[id] = input.value;
+                }
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(state));
+            }
+
+            function loadState() {
+                const savedState = localStorage.getItem(LOCAL_STORAGE_KEY);
+                if (savedState) {
+                    const state = JSON.parse(savedState);
+                    for (const id in state) {
+                        const input = document.getElementById(id);
+                        if (input) {
+                            input.value = state[id];
+                            input.dispatchEvent(new Event('input'));
+                        }
+                    }
+                } else {
+                    for (const id in controls) {
+                        const input = document.getElementById(id);
+                        if(input) input.dispatchEvent(new Event('input'));
+                    }
+                }
+            }
 
             for (const id in controls) {
                 const input = document.getElementById(id);
                 if (!input) continue;
-
                 const valueLabel = document.getElementById(`${id}-value`);
                 const { property, suffix } = controls[id];
-
                 input.addEventListener('input', (e) => {
                     let value = e.target.value;
                     root.style.setProperty(property, value + suffix);
-                    
                     if (id === 'field-card-width') {
                         const height = Math.round(value * CARD_ASPECT_RATIO);
                         root.style.setProperty('--field-card-height', height + 'px');
                     }
-                    
-                    if (valueLabel) {
-                        valueLabel.textContent = value + (suffix || '');
-                    }
+                    if (valueLabel) valueLabel.textContent = value + (suffix || '');
+                    saveState();
                 });
             }
 
-            // Lógica para salvar o CSS
-            document.querySelectorAll('#save-css-btn').forEach(button => {
-                button.addEventListener('click', () => {
-                    const getStyleValue = (id) => {
-                        const control = controls[id];
-                        const element = document.getElementById(id);
-                        if (control && element) {
-                            return element.value + (control.suffix || '');
-                        }
-                        return '';
-                    };
-                    
-                    const fieldCardWidthPx = document.getElementById('field-card-width').value;
-                    const fieldCardHeightPx = Math.round(fieldCardWidthPx * CARD_ASPECT_RATIO) + 'px';
-                    const fieldCardWidth = fieldCardWidthPx + 'px';
-                    const paddingValue = `${getStyleValue('field-padding-vertical')} ${getStyleValue('field-padding-horizontal')}`;
-                    const areaConflitoMinHeight = getStyleValue('area-conflito-height');
+            document.getElementById('save-css-btn').addEventListener('click', () => {
+                const getStyleValue = (id) => {
+                    const control = controls[id];
+                    const element = document.getElementById(id);
+                    return (element && control) ? element.value + (control.suffix || '') : '';
+                };
+                
+                const fieldCardWidthPx = document.getElementById('field-card-width').value;
+                const fieldCardHeightPx = Math.round(fieldCardWidthPx * CARD_ASPECT_RATIO) + 'px';
+                const fieldCardWidth = fieldCardWidthPx + 'px';
+                const paddingValue = `${getStyleValue('field-padding-vertical')} ${getStyleValue('field-padding-horizontal')}`;
+                const areaConflitoMinHeight = getStyleValue('area-conflito-height');
 
-                    let cssTemplate = `/* CSS Gerado pelo Editor de Campo */
+                let cssTemplate = `/* CSS Gerado pelo Editor de Campo */
 
 :root {
     --cor-borda-painel: #a48042;
@@ -391,147 +628,32 @@
     --glow-branco-sutil: 0 0 8px rgba(255, 255, 255, 0.3);
 }
 
-* { 
-    box-sizing: border-box; 
-}
+* { box-sizing: border-box; }
 
-/* ===== LAYOUT PRINCIPAL DO JOGO ===== */
-#game-screen { 
-    display: grid; 
-    grid-template-areas: "left-panel main-field right-panel"; 
-    grid-template-columns: clamp(200px, 15vw, 280px) 1fr clamp(200px, 15vw, 280px); 
-    grid-template-rows: 100%; 
-    width: 100vw; 
-    height: 100vh; 
-    padding: 10px; 
-    gap: 10px; 
-    overflow: hidden;
-    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-    position: relative;
-}
-
-/* ESTRUTURA DO CAMPO */
-.main-field-container {
-    grid-area: main-field;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    min-width: 0;
-    overflow: hidden;
-}
-
-#field { 
-    flex-grow: ${getStyleValue('field-flex-grow')};
-    display: flex; 
-    flex-direction: column; 
-    justify-content: space-between; 
-    position: relative;
-    background: rgba(0, 0, 0, 0.1);
-    width: 100%; /* Ocupa a largura do container pai */
-    gap: ${getStyleValue('field-gap')};
-    padding: ${paddingValue};
-    border-radius: ${getStyleValue('field-border-radius')};
-    margin: 0 auto;
-    overflow: hidden;
-}
-
-/* ===== PAINÉIS LATERAIS ===== */
-.game-ui-panel { 
-    display: flex; 
-    flex-direction: column; 
-    gap: 15px; 
-    padding: 15px; 
-    background: var(--cor-painel); 
-    backdrop-filter: blur(8px); 
-    border: 2px solid var(--cor-borda-painel); 
-    border-radius: 12px; 
-    height: 100%;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-}
-
-.left-panel { grid-area: left-panel; }
-.right-panel { grid-area: right-panel; }
-
-/* ... (O resto do CSS permanece o mesmo) ... */
-
-/* ===== MÃOS DOS JOGADORES ===== */
-.mao { 
-    display: flex; 
-    justify-content: center; 
-    align-items: center; 
-    position: relative; 
-    z-index: 50; 
-    padding: 0 20px; 
-    height: ${getStyleValue('mao-height')}; 
-    flex-shrink: 0;
-}
-#mao-oponente { transform: translateY(${getStyleValue('mao-oponente-y')}); }
-#mao-jogador { transform: translateY(${getStyleValue('mao-jogador-y')}); }
-.mao .card-container { width: ${getStyleValue('mao-card-width')}; transition: transform 0.2s ease, z-index 0s ease 0.1s; margin: 0 ${getStyleValue('mao-card-margin')}; flex-shrink: 0; }
-.mao .card-container:hover { transform: translateY(-15px) scale(1.1); z-index: 100; }
-#mao-oponente .card-container { transform: rotate(180deg); }
-#mao-oponente .card-container:hover { transform: translateY(15px) scale(1.1) rotate(180deg); }
-
-/* ===== TABULEIRO DE JOGO ===== */
+#game-screen { display: grid; grid-template-areas: "left-panel main-field right-panel"; grid-template-columns: clamp(200px, 15vw, 280px) 1fr clamp(200px, 15vw, 280px); grid-template-rows: 100%; width: 100vw; height: 100vh; padding: 10px; gap: 10px; overflow: hidden; background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); position: relative; }
+.main-field-container { grid-area: main-field; display: flex; height: 100%; min-width: 0; overflow: hidden; position: relative; align-items: center; justify-content: center; }
+#game-area-wrapper { display: flex; flex-direction: column; justify-content: center; align-items: center; transform: translate(${getStyleValue('field-position-x')}, ${getStyleValue('field-position-y')}); width: 100%; height: 100%; position: absolute; }
+#field { height: ${getStyleValue('field-height')}; flex-shrink: 0; display: flex; flex-direction: column; justify-content: space-between; position: relative; background: rgba(0, 0, 0, 0.1); width: 100%; max-width: 1200px; gap: ${getStyleValue('field-gap')}; padding: ${paddingValue}; border-radius: ${getStyleValue('field-border-radius')}; margin: 10px auto; overflow: hidden; }
+.game-ui-panel { display: flex; flex-direction: column; gap: 15px; padding: 15px; background: var(--cor-painel); backdrop-filter: blur(8px); border: 2px solid var(--cor-borda-painel); border-radius: 12px; height: 100%; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3); }
+#game-card-preview-display .carta { font-size: ${getStyleValue('card-font-size-preview')}; }
+.mao { display: flex; justify-content: center; align-items: center; position: absolute; z-index: 50; padding: 0 20px; height: ${getStyleValue('mao-height')}; left: 0; right: 0; }
+#mao-oponente { top: 0; transform: translateY(${getStyleValue('mao-oponente-y')}); }
+#mao-jogador { bottom: 0; transform: translateY(${getStyleValue('mao-jogador-y')}); }
+.mao .carta { font-size: ${getStyleValue('card-font-size-mao')}; }
+.mao .card-container { width: ${getStyleValue('mao-card-width')}; transition: transform 0.2s ease, z-index 0s ease 0.1s, margin 0.2s ease; margin: 0 ${getStyleValue('mao-card-margin')}; flex-shrink: 0; }
 .tabuleiro { display: flex; align-items: center; justify-content: center; padding: 5px 0; position: relative; transition: transform 0.1s ease;}
 .tabuleiro.oponente { transform: translateY(${getStyleValue('tabuleiro-oponente-y')}); }
 .tabuleiro.jogador { transform: translateY(${getStyleValue('tabuleiro-jogador-y')}); }
 .lado-jogador { display: grid; grid-template-areas: "vazio1 u1 u2 u3 stats" "cemiterio s1 g s2 deck"; grid-template-columns: repeat(5, auto); gap: ${getStyleValue('lado-jogador-gap')}; width: auto; max-width: ${getStyleValue('lado-jogador-max-width')}; padding: 0; align-items: center; justify-items: center; justify-content: center; }
 .lado-jogador.oponente { grid-template-areas: "deck s2 g s1 cemiterio" "stats u3 u2 u1 vazio1"; }
-.lado-jogador.oponente .card-container { transform: none; }
-.lado-jogador.oponente .card-container .carta { transform: rotate(180deg); }
-#oponente-cemiterio, #jogador-cemiterio { grid-area: cemiterio; }
-#oponente-s1, #jogador-s1 { grid-area: s1; }
-#oponente-g, #jogador-g { grid-area: g; }
-#oponente-s2, #jogador-s2 { grid-area: s2; }
-#oponente-deck, #jogador-deck { grid-area: deck; }
-#oponente-u1, #jogador-u1 { grid-area: u1; }
-#oponente-u2, #jogador-u2 { grid-area: u2; }
-#oponente-u3, #jogador-u3 { grid-area: u3; }
-#oponente-vazio1, #jogador-vazio1 { grid-area: vazio1; }
-#oponente-stats-display, #jogador-stats-display { grid-area: stats; }
-.zona-vazia { opacity: 0; pointer-events: none; border: none !important; background: transparent !important; }
 .zona { border: 2px solid var(--cor-borda-painel-transparente); border-radius: 6px; position: relative; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.2); transition: all 0.3s ease; width: ${fieldCardWidth}; height: ${fieldCardHeightPx}; }
-.zona .card-container { width: 100% !important; height: 100% !important; max-width: none !important; }
-.zona .carta { font-size: 3px !important; width: 100%; height: 100%; }
-.zona:hover { background: rgba(0,0,0,0.3); }
-.zona.cemiterio { background-color: rgba(10, 0, 0, 0.4); cursor: pointer; }
-.zona.cemiterio:hover { border-color: var(--cor-destaque); box-shadow: 0 0 10px var(--cor-destaque); }
-.zona.general { border-width: 3px; border-style: double; box-shadow: 0 0 10px rgba(164, 128, 66, 0.5); }
-.arrastando { z-index: 1001; position: fixed; pointer-events: none; width: 60px; transform: rotate(5deg); filter: brightness(1.2); }
-.count-in-zone { position: absolute; bottom: 2px; right: 4px; background: rgba(0,0,0,0.8); color: white; padding: 2px 6px; border-radius: 12px; font-size: 0.8em; font-weight: bold; border: 1px solid var(--cor-borda-painel); min-width: 18px; text-align: center; }
-
-#area-de-conflito { 
-    display: flex;
-    flex-direction: row-reverse;
-    gap: 8px; 
-    justify-content: center;
-    align-items: center; 
-    min-height: ${areaConflitoMinHeight}; 
-    padding: 10px;
-    border-top: 2px solid var(--cor-borda-painel); 
-    border-bottom: 2px solid var(--cor-borda-painel); 
-    background: rgba(20, 20, 20, 0.6); 
-    border-radius: 8px; 
-    margin: 5px 0; 
-    position: relative; 
-    transition: transform 0.1s ease; 
-    transform: translateY(${getStyleValue('area-conflito-y')}); 
-}
-#area-de-conflito:empty::after { 
-    content: "Zona de Conflito"; 
-    color: var(--cor-borda-painel-transparente); 
-    font-style: italic; 
-    font-size: 0.9em; 
-    position: absolute; 
-}
-#area-de-conflito .card-container { 
-    width: ${fieldCardWidth}; 
-    aspect-ratio: 63 / 88; 
-    flex-shrink: 0;
-}
+.zona .carta { font-size: ${getStyleValue('card-font-size-campo')}; }
+.general-stats-display { display: flex; flex-direction: column; justify-content: center; gap: 4px; background-color: var(--cor-painel-transparente); padding: 8px; border-radius: 6px; border: 1px solid var(--cor-borda-painel-transparente); color: white; font-weight: bold; align-self: center; width: ${fieldCardWidth}; height: ${fieldCardHeightPx}; font-size: ${getStyleValue('stats-font-size')}; }
+#area-de-conflito { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; align-items: center; min-height: ${areaConflitoMinHeight}; width: ${getStyleValue('area-conflito-width')}; padding: 10px; border-top: 2px solid var(--cor-borda-painel); border-bottom: 2px solid var(--cor-borda-painel); background: rgba(20, 20, 20, 0.6); border-radius: 8px; margin: 5px auto; position: relative; transition: transform 0.1s ease; transform: translate(${getStyleValue('area-conflito-x')}, ${getStyleValue('area-conflito-y')}); }
+#area-de-conflito .carta { font-size: ${getStyleValue('card-font-size-campo')}; }
+#area-de-conflito .card-container { width: ${fieldCardWidth}; flex: 0 0 auto; }
+.card-clone .carta { font-size: ${getStyleValue('card-font-size-campo')}; }
 `;
-                    
                     const blob = new Blob([cssTemplate.trim()], { type: 'text/css' });
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
@@ -543,6 +665,8 @@
                     URL.revokeObjectURL(url);
                 });
             });
+            
+            loadState();
         });
     </script>
 </body>

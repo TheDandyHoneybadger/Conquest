@@ -232,7 +232,8 @@ export const Game = {
         const jogador = carta.owner;
         if (!jogador) return;
     
-        const fromRect = document.querySelector(`[data-uid="${carta.uid}"]`)?.getBoundingClientRect();
+        // CORREÇÃO: O seletor agora procura especificamente por um .card-container para a posição inicial
+        const fromRect = document.querySelector(`.card-container[data-uid="${carta.uid}"]`)?.getBoundingClientRect();
     
         // Remove a carta de todas as zonas possíveis
         const maoIndex = jogador.mao.findIndex(c => c.uid === carta.uid);

@@ -103,7 +103,7 @@
 
 #game-card-preview { flex: 1 1 50%; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
 #game-card-preview-display { width: 100%; aspect-ratio: 63 / 88; background: rgba(0,0,0,0.5); border-radius: 8px; border: 2px dashed var(--cor-borda-painel-transparente); transition: all 0.3s ease; flex-shrink: 0; }
-#game-card-preview-display .carta { font-size: 14px; }
+#game-card-preview-display .carta { font-size: 13px; }
 #game-card-preview-display:not(:empty) { border: 2px solid var(--cor-borda-painel); box-shadow: var(--glow-branco-sutil); }
 #game-card-preview-content { overflow-y: auto; flex-grow: 1; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px; font-size: 0.9em; line-height: 1.4; height: 200px; }
 #game-card-preview-content h3 { font-size: 1.0em; color: var(--cor-destaque); margin: 0 0 8px; font-family: 'Lora', serif; }
@@ -157,7 +157,8 @@
 #oponente-stats-display, #jogador-stats-display { grid-area: stats; }
 .zona-vazia { opacity: 0; pointer-events: none; border: none !important; background: transparent !important; }
 .zona { border: 2px solid var(--cor-borda-painel-transparente); border-radius: 6px; position: relative; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.2); transition: all 0.3s ease; width: 95px; height: 133px; }
-.zona .carta { font-size: 3.4px; }
+.zona .card-container { width: 100% !important; height: 100% !important; max-width: none !important; }
+.zona .carta { font-size: 3.1px; }
 .zona:hover { background: rgba(0,0,0,0.3); }
 .zona.cemiterio { background-color: rgba(10, 0, 0, 0.4); cursor: pointer; }
 .zona.cemiterio:hover { border-color: var(--cor-destaque); box-shadow: 0 0 10px var(--cor-destaque); }
@@ -189,7 +190,7 @@
     font-size: 0.9em; 
     position: absolute; 
 }
-#area-de-conflito .carta { font-size: 3.4px; }
+#area-de-conflito .carta { font-size: 3.1px; }
 #area-de-conflito .card-container { 
     width: 95px; 
     aspect-ratio: 63 / 88; 
@@ -228,6 +229,7 @@
 .stat-item .stat-vida { color: lightgreen; }
 .stat-item .stat-xp { color: var(--cor-destaque); }
 .card-clone { position: fixed; z-index: 2000; pointer-events: none; transition: all 0.5s cubic-bezier(0.65, 0, 0.35, 1); }
+.card-clone .carta { font-size: 3.1px; }
 .atacante-valido .carta { box-shadow: 0 0 15px 3px var(--glow-color-jogador) !important; }
 .atacante-selecionado .carta { box-shadow: 0 0 15px 3px gold !important; }
 .alvo-valido .carta { box-shadow: 0 0 15px 3px var(--glow-color-oponente) !important; }
@@ -286,5 +288,5 @@
     height: 133px;
 }
 .zone-popup-cards .carta {
-    font-size: 3.4px;
+    font-size: 3.1px;
 }
