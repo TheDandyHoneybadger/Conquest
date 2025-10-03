@@ -21,23 +21,80 @@
             <button id="signup-btn">Cadastrar</button>
         </div>
     </div>
+
     <div id="main-menu-screen" class="screen hidden">
         <div class="container">
             <h2 id="welcome-message">Bem-vindo!</h2>
-            <button id="goto-lobby-btn">Jogar Online</button>
-            <button id="goto-deckbuilder-btn">Editor de Decks</button>
+            <button id="goto-lobby-btn">Sala de Partida</button>
+            <button id="goto-deckbuilder-btn">Deckbuilder</button>
+            <button id="goto-profile-btn">Editar Perfil</button>
+            <button id="goto-rankings-btn">Rankings</button>
             <button id="logout-btn">Sair</button>
         </div>
     </div>
-    <div id="lobby-list-screen" class="screen hidden">
-        <div class="container" style="width: 50%; max-width: 600px;">
-            <h2>Salas Abertas</h2>
-            <div id="room-list-container"><p>A carregar...</p></div>
-            <button id="create-room-btn">Criar Sala</button>
-            <button id="refresh-rooms-btn">Atualizar</button>
-            <button id="lobby-back-to-menu-btn">Voltar ao Menu</button>
+
+    <div id="profile-screen" class="screen hidden">
+        <div class="container profile-container">
+            <h2>Seu Perfil</h2>
+            <div class="profile-section">
+                <h3>Estatísticas</h3>
+                <div id="profile-stats-container">
+                    <p>A carregar estatísticas...</p>
+                </div>
+            </div>
+            <div class="profile-section">
+                <h3>Visual do Jogador</h3>
+                <div class="profile-visuals">
+                    <div class="visual-item">
+                        <label>Foto de Perfil</label>
+                        <div class="visual-preview" id="profile-pic-preview"></div>
+                        <button class="change-btn">Alterar</button>
+                    </div>
+                    <div class="visual-item">
+                        <label>Sleeve (Verso da Carta)</label>
+                        <div class="visual-preview" id="sleeve-preview"></div>
+                        <button class="change-btn">Alterar</button>
+                    </div>
+                </div>
+            </div>
+            <div class="profile-section">
+                <h3>Histórico de Partidas</h3>
+                <div id="match-history-container">
+                    <p>Em breve...</p>
+                </div>
+            </div>
+             <div class="profile-section">
+                <h3>Conta</h3>
+                <button id="change-password-btn">Editar Senha</button>
+            </div>
+            <button id="profile-back-to-menu-btn">Voltar ao Menu</button>
         </div>
     </div>
+
+
+    <div id="lobby-list-screen" class="screen hidden">
+        <div class="lobby-container">
+             <div class="lobby-sections">
+                <div class="lobby-section">
+                    <h3>Partida Ranqueada</h3>
+                    <p>Encontre um oponente com nível de experiência similar.</p>
+                    <button id="find-ranked-match-btn">Procurar Partida</button>
+                    <button id="cancel-find-ranked-match-btn" class="hidden">Cancelar Busca</button>
+                    <div id="ranked-status"></div>
+                </div>
+                <div class="lobby-section">
+                    <h3>Salas Personalizadas</h3>
+                    <div id="room-list-container"><p>A carregar...</p></div>
+                    <div class="custom-rooms-actions">
+                        <button id="create-room-btn">Criar Sala</button>
+                        <button id="refresh-rooms-btn">Atualizar</button>
+                    </div>
+                </div>
+            </div>
+             <button id="lobby-back-to-menu-btn">Voltar ao Menu Principal</button>
+        </div>
+    </div>
+
     <div id="room-wait-screen" class="screen hidden">
         <div class="container">
             <h2 id="room-wait-title">Aguardando...</h2>
@@ -178,7 +235,7 @@
                     <input type="text" id="chat-input" placeholder="Digite sua mensagem...">
                     <button id="chat-send-btn">Enviar</button>
                 </div>
-                <button id="admitir-derrota-btn" class="menu-button defeat-button">Admitir Derrota</button>
+                <button id="admitir-derrota-btn" class="menu-button defeat-button">Desistir</button>
                 <div class="match-score">
                     <span id="oponente-score">0</span>
                     <span>-</span>
@@ -188,11 +245,30 @@
         </div>
 
         <div id="dice-roll-overlay" class="overlay hidden">
-             <!-- Conteúdo do overlay -->
+             <div class="overlay-content">
+                <h2 id="dice-roll-title">A decidir quem começa...</h2>
+                <div class="dice-container">
+                    <div class="dice-player">
+                        <span id="dice-player-name" class="dice-player-name">Você</span>
+                        <div id="dice-player-result" class="dice-result">?</div>
+                    </div>
+                    <div class="dice-player">
+                        <span id="dice-opponent-name" class="dice-player-name">Oponente</span>
+                        <div id="dice-opponent-result" class="dice-result">?</div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div id="zone-popup" class="overlay hidden">
-            <!-- Conteúdo do popup -->
+            <div class="zone-popup-content">
+                <div class="zone-popup-header">
+                    <h3 id="zone-popup-title">Título da Zona</h3>
+                    <button id="zone-popup-close-btn">&times;</button>
+                </div>
+                <div id="zone-popup-cards" class="zone-popup-cards">
+                </div>
+            </div>
         </div>
     </div>
 
@@ -201,4 +277,3 @@
     <script type="module" src="js/ui/main.js"></script>
 </body>
 </html>
-

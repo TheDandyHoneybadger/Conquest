@@ -9,6 +9,10 @@ export class Carta {
         this.owner = owner;
         Object.assign(this, info);
 
+        // CORREÇÃO: Garante que 'ataque' e 'vida' tenham um valor padrão (0) se não forem definidos.
+        this.ataque = this.ataque ?? 0;
+        this.vida = this.vida ?? 0;
+
         // Propriedades para controle manual
         this.vidaAtual = this.vida;
         this.ataqueAtual = this.ataque;
@@ -16,6 +20,7 @@ export class Carta {
         this.faceDown = false; // "Virada para baixo"
         this.zona = null; // 'mao', 'campo', 'cemiterio', etc.
         this.slot = null;
+        this.transformed = false;
 
         // Propriedades legadas (mantidas para compatibilidade inicial, podem ser removidas)
         this.faceAtual = 'frente';
@@ -30,7 +35,6 @@ export class Carta {
         container.className = 'card-container';
         container.dataset.uid = this.uid;
         
-        // Aplica a classe de animação se a carta estiver virada
         if (this.tapped) {
             container.classList.add('tapped');
         }
@@ -66,8 +70,6 @@ export class Carta {
 
         container.appendChild(cardEl);
         
-        // O evento 'mouseenter' para o preview agora é tratado no game-renderer.js
-        
         return container;
     }
 
@@ -100,7 +102,6 @@ export class Jogador {
         this.cemiterio = [];
         this.campo = { u1: null, u2: null, u3: null, s1: null, s2: null, g: this.general };
         
-        // Novo: Array para rastrear TODAS as cartas do jogador para fácil busca
         this.allCards = [this.general]; 
     }
     
@@ -115,7 +116,6 @@ export class Jogador {
         }
     }
 
-    // Novo: Função para encontrar uma carta em qualquer zona
     findCardByUid(uid) {
         return this.allCards.find(c => c.uid === uid);
     }

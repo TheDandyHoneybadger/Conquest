@@ -73,3 +73,150 @@ body {
     width: auto;
     margin: 0;
 }
+
+/* --- ESTILOS PARA A TELA DE PERFIL --- */
+.profile-container {
+    max-width: 600px;
+}
+
+.profile-section {
+    margin-bottom: 25px;
+    text-align: left;
+    border: 1px solid #444;
+    border-radius: 8px;
+    padding: 15px;
+}
+
+.profile-section h3 {
+    font-family: 'Lora', serif;
+    color: var(--cor-destaque);
+    margin-top: 0;
+    margin-bottom: 15px;
+    border-bottom: 1px solid var(--cor-borda-painel);
+    padding-bottom: 10px;
+}
+
+#profile-stats-container p {
+    font-size: 1.1em;
+    margin: 10px 0;
+}
+
+.profile-visuals {
+    display: flex;
+    justify-content: space-around;
+    gap: 20px;
+}
+
+.visual-item {
+    text-align: center;
+}
+
+.visual-preview {
+    width: 100px;
+    height: 100px;
+    background-color: rgba(0,0,0,0.3);
+    border: 2px dashed #555;
+    border-radius: 50%;
+    margin: 5px auto 10px;
+}
+
+#sleeve-preview {
+    width: 70px;
+    height: 100px;
+    border-radius: 8px;
+}
+
+.visual-item .change-btn {
+    width: auto;
+    padding: 5px 15px;
+    font-size: 0.8em;
+    margin-bottom: 0;
+}
+
+#match-history-container {
+    max-height: 150px;
+    overflow-y: auto;
+    background-color: rgba(0,0,0,0.2);
+    padding: 10px;
+    border-radius: 4px;
+}
+
+/* --- ESTILOS PARA A NOVA TELA DE LOBBY --- */
+.lobby-container {
+    background-color: var(--cor-painel);
+    padding: 20px;
+    border: 2px solid var(--cor-borda-painel);
+    width: 90%;
+    max-width: 1000px;
+    height: 80vh;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.lobby-sections {
+    display: flex;
+    flex-grow: 1;
+    gap: 20px;
+    min-height: 0;
+}
+
+.lobby-section {
+    flex: 1;
+    border: 1px solid #444;
+    border-radius: 8px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.lobby-section h3 {
+    font-family: 'Lora', serif;
+    color: var(--cor-destaque);
+    margin-top: 0;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.lobby-section p {
+    text-align: center;
+    color: #ccc;
+    font-size: 0.9em;
+    margin-bottom: 20px;
+}
+
+#room-list-container {
+    flex-grow: 1;
+    overflow-y: auto;
+    background-color: rgba(0,0,0,0.2);
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+}
+
+.custom-rooms-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.custom-rooms-actions button {
+    flex: 1;
+    padding: 10px;
+}
+
+#find-ranked-match-btn, #cancel-find-ranked-match-btn {
+    padding: 20px;
+    font-size: 1.2em;
+}
+
+#ranked-status {
+    margin-top: 20px;
+    text-align: center;
+    font-style: italic;
+    color: #ccc;
+}
+
+#lobby-back-to-menu-btn {
+    padding: 12px;
+    margin-top: 10px;
+}

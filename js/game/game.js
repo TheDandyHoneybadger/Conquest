@@ -1,7 +1,8 @@
 // js/game/game.js
 
 import { auth } from '../firebase/firebase-config.js';
-import { sendGameAction, updateGameState, listenToGameActions, updateScoreAndStartNewGame } from '../firebase/online.js';
+// CORREÇÃO: Importa as funções corretas, incluindo 'sendGameAction'
+import { sendGameAction, updateGameState, listenToGameActions, updateScoreAndStartNewGame, leaveRoom } from '../firebase/online.js';
 import { PHASES } from './game-constants.js';
 import { setupUI, renderizarTudo, animateCardMove, updateScoreDisplay, logMessage } from './game-renderer.js';
 import { setupPlayers, executarLogicaDeFase } from './game-logic.js';
@@ -69,7 +70,7 @@ export const Game = {
     },
     
     syncGameState(gameState, scores) {
-        if (!this.isGameRunning) return;
+        if (!this.isGameRunning || !gameState) return;
 
         this.onlineState.scores = scores;
         updateScoreDisplay(scores, this.onlineState.localPlayerUid, this.jogadores);
@@ -105,14 +106,14 @@ export const Game = {
              return;
         }
         
-        if (action.type === 'MANUAL_SHUFFLE_DECK') {
+        if (action.type === 'MANUAL_SHUFFLE_DECK' && sender) {
             sender.deck = sender.deck.sort(() => Math.random() - 0.5);
             this.renderizarTudo();
             this.log(senderName, `embaralhou o próprio deck.`);
             return;
         }
 
-        if (action.type === 'MANUAL_MILL_TOP_CARD') {
+        if (action.type === 'MANUAL_MILL_TOP_CARD' && sender) {
             if(sender.deck.length > 0) {
                 const milledCard = sender.deck.pop();
                 sender.cemiterio.push(milledCard);
@@ -134,11 +135,10 @@ export const Game = {
                 break;
             case 'MANUAL_FLIP_CARD':
                 targetCard.faceDown = !targetCard.faceDown;
-                this.renderizarTudo();
                 this.log(senderName, `Virou ${targetCard.nome} para ${targetCard.faceDown ? 'baixo' : 'cima'}.`, targetCard);
                 break;
             case 'MANUAL_TRANSFORM_GENERAL':
-                if (targetCard.tipo === 'General' && targetCard.segundaFace) {
+                 if (targetCard.tipo === 'General' && targetCard.segundaFace) {
                     if (!targetCard._primeiraFace) {
                         targetCard._primeiraFace = {
                             nome: targetCard.nome,
@@ -148,7 +148,6 @@ export const Game = {
                             arte: targetCard.arte
                         };
                     }
-
                     if (targetCard.transformed) {
                         Object.assign(targetCard, targetCard._primeiraFace);
                         targetCard.transformed = false;
@@ -161,7 +160,6 @@ export const Game = {
                     targetCard.vidaAtual = targetCard.vida; 
                     targetCard.ataqueAtual = targetCard.ataque;
                 }
-                this.renderizarTudo();
                 break;
             case 'MANUAL_ACTIVATE_ABILITY':
                 const cardEl = document.querySelector(`[data-uid="${targetCard.uid}"]`);
@@ -176,7 +174,6 @@ export const Game = {
             case 'MANUAL_CHANGE_STATS':
                 targetCard.ataqueAtual = action.payload.atk;
                 targetCard.vidaAtual = action.payload.vida;
-                this.renderizarTudo();
                 this.log(senderName, `Alterou os status de ${targetCard.nome} para ${targetCard.ataqueAtual}/${targetCard.vidaAtual}.`, targetCard);
                 break;
             case 'MANUAL_MOVE_CARD':
@@ -184,13 +181,14 @@ export const Game = {
                  this.log(senderName, `Moveu ${targetCard.nome} para ${action.payload.destination}.`, targetCard);
                  break;
         }
+        this.renderizarTudo();
     },
     
     getCurrentGameState() {
         return {
             turn: this.turno,
             phase: this.fase,
-            currentPlayerUid: this.jogadores[this.jogadorAtual].uid,
+            currentPlayerUid: this.jogadores.length > 0 ? this.jogadores[this.jogadorAtual].uid : null,
         };
     },
     
@@ -204,6 +202,7 @@ export const Game = {
         this.isGameRunning = false;
         const winner = this.jogadores.find(j => j.uid === winnerUid);
         alert(`Fim da partida! O vencedor é ${winner.nome}!`);
+        leaveRoom();
     },
 
     passarTurno() {
@@ -224,6 +223,7 @@ export const Game = {
         updateGameState(newGameState);
     },
 
+    // CORREÇÃO: enviarAcao agora apenas envia a ação, não a executa localmente.
     enviarAcao(type, payload) {
         sendGameAction({ type, payload });
     },
@@ -232,10 +232,8 @@ export const Game = {
         const jogador = carta.owner;
         if (!jogador) return;
     
-        // CORREÇÃO: O seletor agora procura especificamente por um .card-container para a posição inicial
         const fromRect = document.querySelector(`.card-container[data-uid="${carta.uid}"]`)?.getBoundingClientRect();
     
-        // Remove a carta de todas as zonas possíveis
         const maoIndex = jogador.mao.findIndex(c => c.uid === carta.uid);
         if (maoIndex > -1) jogador.mao.splice(maoIndex, 1);
     
@@ -254,27 +252,16 @@ export const Game = {
         const deckIndex = jogador.deck.findIndex(c => c.uid === carta.uid);
         if (deckIndex > -1) jogador.deck.splice(deckIndex, 1);
     
-        // Adiciona a carta à nova zona
         if (payload.destination === 'campo') {
             jogador.campo[payload.destinationSlot] = carta;
-            carta.zona = 'campo';
-            carta.slot = payload.destinationSlot;
         } else if (payload.destination === 'mao') {
             jogador.mao.push(carta);
-            carta.zona = 'mao';
-            carta.slot = null;
         } else if (payload.destination === 'cemiterio') {
             jogador.cemiterio.push(carta);
-            carta.zona = 'cemiterio';
-            carta.slot = null;
         } else if (payload.destination === 'conflito') {
             this.zonaDeConflito.push(carta);
-            carta.zona = 'conflito';
-            carta.slot = null;
         } else if (payload.destination === 'deck') {
             jogador.deck.push(carta);
-            carta.zona = 'deck';
-            carta.slot = null;
         }
     
         if (fromRect && senderUid === this.onlineState.localPlayerUid) {
@@ -325,7 +312,9 @@ export const Game = {
 
     admitirDerrota() {
         if (!this.isGameRunning || !this.onlineState.opponentPlayerUid) return;
-        updateScoreAndStartNewGame(this.onlineState.opponentPlayerUid);
+        if (confirm('Tem a certeza que quer desistir desta ronda? O seu oponente ganhará um ponto.')) {
+            updateScoreAndStartNewGame(this.onlineState.opponentPlayerUid);
+        }
     },
 
     enviarMensagemChat(mensagem) {

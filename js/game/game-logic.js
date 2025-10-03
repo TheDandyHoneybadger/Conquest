@@ -3,6 +3,8 @@
 import { databaseCartas } from '../../data/database.js';
 import { Carta, Jogador } from './game-engine.js';
 import { Game } from './game.js';
+// ADIÇÃO: Importar a nova função
+import { updateUserXP } from '../firebase/online.js';
 
 export function setupPlayers(playersData, playerOrder) {
     const jogadores = [];
@@ -32,7 +34,7 @@ export function criarJogador(id, uid, playerData) {
             const uniqueCardUID = `${uid}_${cardCounter++}`; 
             const novaCarta = new Carta(JSON.parse(JSON.stringify(template)), uniqueCardUID, jogador);
             jogador.deck.push(novaCarta);
-            jogador.allCards.push(novaCarta); // Adiciona ao rastreador
+            jogador.allCards.push(novaCarta);
         }
     });
     
@@ -46,6 +48,8 @@ export function executarLogicaDeFase(jogador, fase, turno){
     if(fase === 0) { // Fase de XP
        jogador.experiencia++;
        Game.log('Sistema', `${jogador.nome} ganhou 1 de Experiência.`);
+       // ADIÇÃO: Atualiza o XP do perfil do utilizador no Firebase
+       updateUserXP(jogador.uid, 1);
     }
     else if(fase === 1) { // Fase de Compra
        if (!(turno === 1 && Game.jogadores.indexOf(jogador) === 0)) { 
@@ -54,4 +58,3 @@ export function executarLogicaDeFase(jogador, fase, turno){
        }
    }
 }
-

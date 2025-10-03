@@ -119,7 +119,7 @@ function renderizarDeckECemiterio(prefixo, jogador) {
         
         newDeckZone.addEventListener('contextmenu', (e) => {
             e.preventDefault();
-            showContextMenu(e, null, 'deck', prefixo);
+            showContextMenu(e, null, prefixo, 'deck');
         });
     }
     
@@ -138,8 +138,9 @@ function renderizarDeckECemiterio(prefixo, jogador) {
             newCemZone.appendChild(el);
         }
         
-        newCemZone.addEventListener('click', () => {
-            showZonePopup(`${jogador.nome} - Cemitério`, jogador.cemiterio, 'cemiterio');
+        newCemZone.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            showContextMenu(e, null, prefixo, 'cemiterio');
         });
     }
 }
@@ -147,6 +148,14 @@ function renderizarDeckECemiterio(prefixo, jogador) {
 function renderizarZonaDeConflito() {
     const conflictZoneEl = document.getElementById('area-de-conflito');
     if (!conflictZoneEl) return;
+    
+    // Lógica para mostrar/esconder a zona de conflito
+    if (Game.zonaDeConflito.length > 0) {
+        conflictZoneEl.classList.add('visible');
+    } else {
+        conflictZoneEl.classList.remove('visible');
+    }
+    
     conflictZoneEl.innerHTML = '';
     Game.zonaDeConflito.forEach(carta => {
         carta.zona = 'conflito';
@@ -163,6 +172,7 @@ function renderizarZonaDeConflito() {
         conflictZoneEl.appendChild(cartaEl);
     });
 }
+
 export function renderizarFases() {
     const jogador = Game.jogadores[Game.jogadorAtual];
     if (!jogador) return;
